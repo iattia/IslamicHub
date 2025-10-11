@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hadith Explorer - Discover Islamic Traditions by Category</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #f093fb;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-on-brand: #ffffff;
+            --surface-primary: rgba(255, 255, 255, 0.95);
+            --surface-secondary: #f9fafb;
+            --surface-tertiary: #ffffff;
+            --border-primary: rgba(255, 255, 255, 0.2);
+            --border-secondary: #d1d5db;
+            --border-interactive: #9ca3af;
+            --brand-primary-start: #667eea;
+            --brand-primary-end: #764ba2;
+            --success: #10b981;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --interactive-bg-hover: #f3f4f6;
+            --interactive-bg-active: #ffffff;
+            --slider-bg: #ccc;
+        }
+
+        html[data-theme="dark"] {
+            /* Dark Theme Overrides */
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --surface-primary: rgba(31, 41, 55, 0.9);
+            --surface-secondary: #1f2937;
+            --surface-tertiary: #374151;
+            --border-primary: rgba(255, 255, 255, 0.1);
+            --border-secondary: #4b5563;
+            --border-interactive: #6b7280;
+            --brand-primary-start: #8b9dff;
+            --brand-primary-end: #a280d9;
+            --shadow-color: rgba(0, 0, 0, 0.25);
+            --interactive-bg-hover: #4b5563;
+            --interactive-bg-active: #1f2937;
+            --slider-bg: #6b7280;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+        /* Generic Card Style */
+        .card {
+            background: var(--surface-primary);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px var(--shadow-color);
+            border: 1px solid var(--border-primary);
+            transition: all 0.3s ease;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Header - Standardized across all pages */
+        .header-content { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            flex-wrap: wrap; 
+            gap: 1rem; 
+        }
+        .header-brand { 
+            flex: 0 0 350px;
+            min-width: 0; 
+        }
+        .header-brand h1 { 
+            font-size: 1.875rem; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, var(--brand-primary-start), var(--brand-primary-end)); 
+            -webkit-background-clip: text; 
+            background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 0.25rem; 
+            line-height: 1.2;
+        }
+        .header-subtitle { 
+            color: var(--text-secondary); 
+            font-size: 1rem; 
+            line-height: 1.4;
+            max-width: 400px;
+        }
+        .header-actions { 
+            display: flex; 
+            gap: 0.75rem; 
+            align-items: center; 
+            flex-wrap: nowrap; 
+            flex-shrink: 0;
+        }
+        .header-actions .btn { 
+            white-space: nowrap; 
+            min-width: fit-content; 
+        }
+
+        /* Buttons */
+        .btn { padding: 0.75rem 1.25rem; border: none; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-secondary { background: var(--surface-tertiary); color: var(--text-secondary); border: 1px solid var(--border-secondary); }
+        .btn-secondary:hover { background: var(--interactive-bg-hover); transform: translateY(-1px); }
+
+        /* Settings Panel */
+        .settings-panel { margin-bottom: 1.5rem; overflow: hidden; display: none; }
+        .settings-panel.active { display: block; }
+        .settings-tabs { display: flex; background: var(--surface-secondary); border-bottom: 1px solid var(--border-secondary); }
+        .settings-tab { flex: 1; padding: 1rem; background: none; border: none; cursor: pointer; font-weight: 500; color: var(--text-secondary); transition: all 0.3s ease; }
+        .settings-tab.active { background: var(--interactive-bg-active); color: var(--brand-primary-start); border-bottom: 2px solid var(--brand-primary-start); }
+        .settings-tab:hover { background: var(--interactive-bg-hover); color: var(--text-primary); }
+        .settings-content { padding: 1.5rem; }
+        .settings-section { display: none; } .settings-section.active { display: block; }
+        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .setting-group { background: var(--surface-secondary); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-secondary); }
+        .setting-group h3 { font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); }
+        .setting-item { margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .setting-item:last-child { margin-bottom: 0; }
+        .setting-label { font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); }
+        .setting-control { padding: 0.5rem 0.75rem; border: 1px solid var(--border-secondary); border-radius: 0.375rem; font-size: 0.875rem; background: var(--surface-tertiary); color: var(--text-primary); }
+        .switch { position: relative; display: inline-block; width: 48px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: var(--slider-bg); transition: 0.3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--brand-primary-start); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* Category Selection */
+        .section-header { text-align: center; margin-bottom: 1.5rem; }
+        .section-title { font-size: 1.5rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; }
+        .section-subtitle { font-size: 1rem; color: var(--text-secondary); }
+        .categories-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .category-card { background: var(--surface-tertiary); border: 2px solid var(--border-secondary); border-radius: 0.75rem; padding: 1.25rem; cursor: pointer; transition: all 0.3s ease; text-align: center; position: relative; }
+        .category-card:hover { border-color: var(--brand-primary-start); transform: translateY(-2px); box-shadow: 0 4px 6px -1px var(--shadow-color); }
+        .category-card.selected { border-color: var(--brand-primary-start); background: linear-gradient(135deg, var(--brand-primary-start), var(--brand-primary-end)); color: var(--text-on-brand); }
+        .category-card.selected .category-name, .category-card.selected .category-description { color: var(--text-on-brand); }
+        .selection-counter { position: absolute; top: -8px; right: -8px; background: var(--success); color: #fff; border-radius: 9999px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; box-shadow: 0 4px 6px -1px var(--shadow-color); }
+        .category-icon { font-size: 1.875rem; margin-bottom: 0.75rem; }
+        .category-name { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .category-description { font-size: 0.875rem; color: var(--text-secondary); opacity: 0.8; }
+        .category-card.selected .category-description { opacity: 0.9; }
+
+        /* Filters & Generate Button */
+        .filters-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 1.5rem; }
+        .filters-section .collection-filters { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; max-width: 100%; }
+        .collection-filter { background: var(--surface-tertiary); border: 2px solid var(--border-interactive); border-radius: 9999px; padding: 0.5rem 0.875rem; cursor: pointer; transition: all 0.3s ease; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); white-space: nowrap; position: relative; }
+        .collection-filter:hover { border-color: var(--brand-primary-start); transform: translateY(-1px); }
+        .collection-filter.active { background: var(--brand-primary-start); color: var(--text-on-brand); border-color: var(--brand-primary-start); }
+        
+        /* Length Filters */
+        .length-filters-section { text-align: center; margin-bottom: 1.5rem; }
+        .filter-section-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.75rem; }
+        .length-filters { display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+        .length-filter { background: var(--surface-tertiary); border: 2px solid var(--border-interactive); border-radius: 0.5rem; padding: 0.5rem 1rem; cursor: pointer; transition: all 0.3s ease; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); min-width: 80px; position: relative; }
+        .length-filter:hover { border-color: var(--success); transform: translateY(-1px); }
+        .length-filter.active { background: var(--success); color: white; border-color: var(--success); }
+        
+        .generate-section { text-align: center; }
+        .generate-btn { background: linear-gradient(135deg, var(--success), #34d399); color: #fff; padding: 1rem 2rem; border: none; border-radius: 0.75rem; font-size: 1.125rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px var(--shadow-color); }
+        .generate-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px var(--shadow-color); }
+        .generate-btn:disabled { background: var(--text-secondary); cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.7; }
+
+        /* Hadith Display */
+        .hadith-results { display: none; }
+        .hadith-results.show { display: block; }
+        .hadith-card { background: var(--surface-tertiary); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px -1px var(--shadow-color); border-left: 4px solid var(--brand-primary-start); }
+        .hadith-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+        .hadith-collection, .hadith-grade { color: #fff; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+        .hadith-collection { background: var(--brand-primary-start); } .hadith-grade { background: var(--success); }
+        .hadith-arabic { font-size: 1.25rem; line-height: 1.8; text-align: right; margin-bottom: 1rem; padding: 1rem; background: var(--surface-secondary); border-radius: 0.5rem; border-right: 3px solid var(--brand-primary-start); direction: rtl; font-weight: 600; color: var(--text-primary); }
+        .hadith-translation { font-size: 1rem; line-height: 1.7; margin-bottom: 1rem; color: var(--text-secondary); font-style: italic; }
+        .hadith-narrator { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; border-top: 1px solid var(--border-secondary); padding-top: 0.75rem; }
+        .hadith-reference { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+        .topic-badge { background: var(--brand-primary-start); color: white; padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; margin-right: 0.25rem; }
+
+        /* Loading Animation */
+        .loading-container { text-align: center; padding: 2rem; display: none; }
+        .loading-container.show { display: block; }
+        .loading-spinner { width: 64px; height: 64px; border: 4px solid var(--border-interactive); border-top: 4px solid var(--brand-primary-start); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 1.125rem; color: var(--text-secondary); font-weight: 500; }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header-content { flex-direction: column; text-align: center; align-items: center; }
+            .header-brand { text-align: center; }
+            .header-actions { gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+            .header-actions .btn { font-size: 0.875rem; padding: 0.5rem 0.75rem; }
+            .categories-grid { grid-template-columns: 1fr; }
+            .hadith-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <header class="header card">
+            <div class="header-content">
+                <div class="header-brand">
+                    <h1>📚 Hadith Explorer</h1>
+                    <div class="header-subtitle">Discover authentic Islamic traditions by topic</div>
+                </div>
+                <div class="header-actions">
+                    <a href="quran.html" class="btn btn-secondary">📖 Quran</a>
+                    <a href="prayer-times.html" class="btn btn-secondary">🕌 Prayer Times</a>
+                    <a href="hadith-explorer.html" class="btn btn-secondary">📚 Hadith</a>
+                    <a href="islamic-ai.html" class="btn btn-secondary">🤖 Ask AI</a>
+                    <button class="btn btn-secondary" onclick="toggleSettings()">⚙️ Settings</button>
+                    <button id="themeToggle" class="btn btn-secondary" onclick="toggleDarkMode()">☀️</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="settings-panel card" id="settingsPanel">
+            <div class="settings-tabs">
+                <button class="settings-tab active" onclick="showSettingsTab('display', this)">🎨 Display</button>
+                <button class="settings-tab" onclick="showSettingsTab('content', this)">📚 Content</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section active" id="display-settings">
+                    <div class="settings-grid">
+                        <div class="setting-group">
+                            <h3>Appearance</h3>
+                            <div class="setting-item">
+                                <label class="setting-label">Font Size</label>
+                                <select id="fontSizeSelect" class="setting-control" onchange="changeFontSize(this.value)">
+                                    <option value="14px">Small</option>
+                                    <option value="16px" selected>Medium</option>
+                                    <option value="18px">Large</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section" id="content-settings">
+                    <div class="settings-grid">
+                        <div class="setting-group">
+                            <h3>Content Display</h3>
+                            <div class="setting-item">
+                                <label class="setting-label">Show Arabic Text</label>
+                                <label class="switch"><input type="checkbox" id="showArabic" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">Show Narrator</label>
+                                <label class="switch"><input type="checkbox" id="showNarrator" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">Number of Hadith</label>
+                                <select id="hadithCount" class="setting-control">
+                                    <option value="3">3 Hadith</option>
+                                    <option value="5" selected>5 Hadith</option>
+                                    <option value="8">8 Hadith</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="category-section card">
+            <div class="section-header">
+                <h2 class="section-title">Choose Topics</h2>
+                <p class="section-subtitle" id="selectionInfo">Select one or more topics to explore</p>
+                <div class="topic-controls" style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem;">
+                    <button class="btn btn-secondary" id="selectAllTopics" onclick="selectAllTopics()">Select All Topics</button>
+                    <button class="btn btn-secondary" id="unselectAllTopics" onclick="unselectAllTopics()">Unselect All</button>
+                </div>
+            </div>
+            <div class="categories-grid">
+                <div class="category-card" data-category="prayer"><div class="category-icon">🕌</div><div class="category-name">Prayer</div><div class="category-description">Worship & supplications</div></div>
+                <div class="category-card" data-category="charity"><div class="category-icon">🤲</div><div class="category-name">Charity</div><div class="category-description">Giving and helping others</div></div>
+                <div class="category-card" data-category="family"><div class="category-icon">👨‍👩‍👧‍👦</div><div class="category-name">Family</div><div class="category-description">Marriage and parenting</div></div>
+                <div class="category-card" data-category="character"><div class="category-icon">✨</div><div class="category-name">Character</div><div class="category-description">Moral conduct & ethics</div></div>
+                <div class="category-card" data-category="knowledge"><div class="category-icon">📚</div><div class="category-name">Knowledge</div><div class="category-description">Seeking wisdom</div></div>
+                <div class="category-card" data-category="patience"><div class="category-icon">⏳</div><div class="category-name">Patience</div><div class="category-description">Dealing with hardship</div></div>
+                <div class="category-card" data-category="fasting"><div class="category-icon">🌙</div><div class="category-name">Fasting</div><div class="category-description">Ramadan & voluntary fasting</div></div>
+                <div class="category-card" data-category="hajj"><div class="category-icon">🕋</div><div class="category-name">Hajj & Umrah</div><div class="category-description">Pilgrimage guidance</div></div>
+                <div class="category-card" data-category="business"><div class="category-icon">💼</div><div class="category-name">Business</div><div class="category-description">Trade & commerce ethics</div></div>
+                <div class="category-card" data-category="forgiveness"><div class="category-icon">🤍</div><div class="category-name">Forgiveness</div><div class="category-description">Mercy & pardoning others</div></div>
+                <div class="category-card" data-category="jihad"><div class="category-icon">⚔️</div><div class="category-name">Jihad</div><div class="category-description">Struggle & self-improvement</div></div>
+                <div class="category-card" data-category="death"><div class="category-icon">🌅</div><div class="category-name">Death & Afterlife</div><div class="category-description">Preparation for hereafter</div></div>
+                <div class="category-card" data-category="justice"><div class="category-icon">⚖️</div><div class="category-name">Justice</div><div class="category-description">Fairness & equality</div></div>
+                <div class="category-card" data-category="friendship"><div class="category-icon">🤝</div><div class="category-name">Friendship</div><div class="category-description">Good companionship</div></div>
+                <div class="category-card" data-category="health"><div class="category-icon">🌿</div><div class="category-name">Health</div><div class="category-description">Physical & mental wellness</div></div>
+                <div class="category-card" data-category="angels"><div class="category-icon">👼</div><div class="category-name">Angels</div><div class="category-description">Belief in angels</div></div>
+                <div class="category-card" data-category="paradise"><div class="category-icon">🌺</div><div class="category-name">Paradise</div><div class="category-description">Jannah & its rewards</div></div>
+                <div class="category-card" data-category="repentance"><div class="category-icon">🤲</div><div class="category-name">Repentance</div><div class="category-description">Tawbah & seeking forgiveness</div></div>
+            </div>
+            <div class="filters-section">
+                <div class="collection-controls" style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;" onclick="selectAllCollections()">Select All Collections</button>
+                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;" onclick="unselectAllCollections()">Unselect All</button>
+                </div>
+                <div class="collection-filters">
+                    <div class="collection-filter active" data-collection="bukhari">Sahih Bukhari</div>
+                    <div class="collection-filter active" data-collection="muslim">Sahih Muslim</div>
+                    <div class="collection-filter active" data-collection="tirmidhi">Jami' at-Tirmidhi</div>
+                    <div class="collection-filter active" data-collection="abudawud">Sunan Abu Dawud</div>
+                    <div class="collection-filter active" data-collection="nasai">Sunan an-Nasa'i</div>
+                    <div class="collection-filter active" data-collection="ibnmajah">Sunan Ibn Majah</div>
+                    <div class="collection-filter active" data-collection="malik">Muwatta Malik</div>
+                    <div class="collection-filter active" data-collection="ahmad">Musnad Ahmad</div>
+                </div>
+            </div>
+            <div class="length-filters-section">
+                <div class="filter-section-title">📏 Hadith Length (click multiple)</div>
+                <div class="length-controls" style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 0.5rem;">
+                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;" onclick="selectAllLengths()">Select All Lengths</button>
+                    <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;" onclick="unselectAllLengths()">Unselect All</button>
+                </div>
+                <div class="length-filters">
+                    <div class="length-filter active" data-length="short">Short</div>
+                    <div class="length-filter active" data-length="medium">Medium</div>
+                    <div class="length-filter active" data-length="long">Long</div>
+                </div>
+            </div>
+            <div class="generate-section">
+                <button class="generate-btn" id="generateBtn" disabled>🔍 Explore Hadith</button>
+            </div>
+        </section>
+
+        <div class="loading-container" id="loadingContainer"><div class="loading-spinner"></div><div class="loading-text">Searching...</div></div>
+        <section class="hadith-results card" id="hadithResults"><div id="hadithContainer"></div></section>
+    </div>
+
+    <script>
+        // DOM Elements
+        const generateBtn = document.getElementById('generateBtn');
+        const categoryGrid = document.querySelector('.categories-grid');
+        const filtersSection = document.querySelector('.filters-section');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const hadithResults = document.getElementById('hadithResults');
+        const hadithContainer = document.getElementById('hadithContainer');
+
+        // IMPORTANT: Storing API keys in client-side code is a major security risk.
+        // For a real application, this should be handled by a secure backend server.
+        const GEMINI_API_KEY = 'AIzaSyA6QVJgjdRb_BpFMXG3zRlYixbOz0cO8ZM';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+        let selectedCategories = new Set();
+        let selectedCollections = new Set(['bukhari', 'muslim', 'tirmidhi', 'abudawud', 'nasai', 'ibnmajah', 'malik', 'ahmad']);
+        let selectedLengths = new Set(['short', 'medium', 'long']);
+
+        const categoryInfo = {
+            prayer: { name: 'Prayer (Salah)' }, 
+            charity: { name: 'Charity (Zakat)' }, 
+            family: { name: 'Family Life' },
+            character: { name: 'Character & Ethics' }, 
+            knowledge: { name: 'Knowledge' }, 
+            patience: { name: 'Patience & Trials' },
+            fasting: { name: 'Fasting (Sawm)' },
+            hajj: { name: 'Hajj & Umrah' },
+            business: { name: 'Business Ethics' },
+            forgiveness: { name: 'Forgiveness & Mercy' },
+            jihad: { name: 'Jihad & Struggle' },
+            death: { name: 'Death & Afterlife' },
+            justice: { name: 'Justice & Fairness' },
+            friendship: { name: 'Friendship & Companionship' },
+            health: { name: 'Health & Wellness' },
+            angels: { name: 'Angels & Unseen' },
+            paradise: { name: 'Paradise (Jannah)' },
+            repentance: { name: 'Repentance (Tawbah)' }
+        };
+
+        // --- THEME & SETTINGS MANAGEMENT ---
+        // --- THEME MANAGEMENT (Standardized) ---
+        const getPreferredTheme = () => localStorage.getItem('theme') || 'dark';
+        const setTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            const themeToggleButton = document.getElementById('themeToggle');
+            if (themeToggleButton) {
+                themeToggleButton.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+        };
+        
+        // Initialize theme immediately
+        setTheme(getPreferredTheme());
+        
+        function toggleDarkMode() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'light' ? 'dark' : 'light');
+        }
+        
+        const toggleSettings = () => document.getElementById('settingsPanel').classList.toggle('active');
+        const showSettingsTab = (tabName, element) => {
+            document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`${tabName}-settings`).classList.add('active');
+            element.classList.add('active');
+        };
+        const changeFontSize = (fontSize) => {
+            document.body.style.fontSize = fontSize;
+            localStorage.setItem('hadithExplorerFontSize', fontSize);
+        };
+        const loadSettings = () => {
+            const fontSize = localStorage.getItem('hadithExplorerFontSize');
+            if (fontSize) {
+                document.body.style.fontSize = fontSize;
+                document.getElementById('fontSizeSelect').value = fontSize;
+            }
+        };
+
+        // --- UI & EVENT HANDLING ---
+        const initializeApp = () => {
+            setTheme(getPreferredTheme());
+            loadSettings();
+            setupEventListeners();
+        };
+
+        const setupEventListeners = () => {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => { if (!localStorage.getItem('theme')) setTheme(e.matches ? 'dark' : 'light'); });
+            categoryGrid.addEventListener('click', handleCategorySelect);
+            document.querySelector('.collection-filters').addEventListener('click', handleCollectionSelect);
+            document.querySelector('.length-filters').addEventListener('click', handleLengthSelect);
+            generateBtn.addEventListener('click', generateHadith);
+        };
+
+        const handleCategorySelect = (e) => {
+            const card = e.target.closest('.category-card');
+            if (!card) return;
+            const category = card.dataset.category;
+            card.classList.toggle('selected');
+            if (selectedCategories.has(category)) selectedCategories.delete(category);
+            else selectedCategories.add(category);
+            updateUI();
+        };
+
+        const handleCollectionSelect = (e) => {
+            const filter = e.target.closest('.collection-filter');
+            if (!filter) return;
+            
+            const collection = filter.dataset.collection;
+            
+            // Toggle individual collection
+            if (selectedCollections.has(collection)) {
+                selectedCollections.delete(collection);
+                filter.classList.remove('active');
+            } else {
+                selectedCollections.add(collection);
+                filter.classList.add('active');
+            }
+        };
+
+        const handleLengthSelect = (e) => {
+            const filter = e.target.closest('.length-filter');
+            if (!filter) return;
+            
+            const length = filter.dataset.length;
+            
+            // Toggle individual length
+            if (selectedLengths.has(length)) {
+                selectedLengths.delete(length);
+                filter.classList.remove('active');
+            } else {
+                selectedLengths.add(length);
+                filter.classList.add('active');
+            }
+        };
+        
+        const updateUI = () => {
+            const selectionInfo = document.getElementById('selectionInfo');
+            generateBtn.disabled = selectedCategories.size === 0;
+            document.querySelectorAll('.selection-counter').forEach(c => c.remove());
+            
+            if (selectedCategories.size === 0) {
+                selectionInfo.textContent = 'Select one or more topics to explore';
+            } else {
+                const names = Array.from(selectedCategories).map(c => categoryInfo[c].name).join(', ');
+                selectionInfo.textContent = `${selectedCategories.size} topic(s) selected: ${names}`;
+                Array.from(selectedCategories).forEach((cat, index) => {
+                    const card = document.querySelector(`.category-card[data-category="${cat}"]`);
+                    if (card) {
+                        const counter = document.createElement('div');
+                        counter.className = 'selection-counter';
+                        counter.textContent = index + 1;
+                        card.appendChild(counter);
+                    }
+                });
+            }
+        };
+        
+        const clearAllSelections = () => {
+            selectedCategories.clear();
+            document.querySelectorAll('.category-card.selected').forEach(c => c.classList.remove('selected'));
+            updateUI();
+        };
+
+        const selectAllTopics = () => {
+            // Select all available topics
+            const allTopicCards = document.querySelectorAll('.category-card');
+            allTopicCards.forEach(card => {
+                const category = card.dataset.category;
+                selectedCategories.add(category);
+                card.classList.add('selected');
+            });
+            updateUI();
+        };
+
+        const unselectAllTopics = () => {
+            selectedCategories.clear();
+            document.querySelectorAll('.category-card.selected').forEach(c => c.classList.remove('selected'));
+            updateUI();
+        };
+
+        const selectAllCollections = () => {
+            // Select all available collections
+            const allCollectionFilters = document.querySelectorAll('.collection-filter');
+            allCollectionFilters.forEach(filter => {
+                const collection = filter.dataset.collection;
+                selectedCollections.add(collection);
+                filter.classList.add('active');
+            });
+        };
+
+        const unselectAllCollections = () => {
+            selectedCollections.clear();
+            document.querySelectorAll('.collection-filter.active').forEach(f => f.classList.remove('active'));
+        };
+
+        const selectAllLengths = () => {
+            // Select all available lengths
+            const allLengthFilters = document.querySelectorAll('.length-filter');
+            allLengthFilters.forEach(filter => {
+                const length = filter.dataset.length;
+                selectedLengths.add(length);
+                filter.classList.add('active');
+            });
+        };
+
+        const unselectAllLengths = () => {
+            selectedLengths.clear();
+            document.querySelectorAll('.length-filter.active').forEach(f => f.classList.remove('active'));
+        };
+
+        // --- API & DATA HANDLING ---
+        const generateHadith = async () => {
+            if (selectedCategories.size === 0) return;
+            loadingContainer.classList.add('show');
+            hadithResults.classList.remove('show');
+            
+            try {
+                const hadithData = await getHadithFromAI();
+                displayHadith(hadithData);
+            } catch (error) {
+
+                hadithContainer.innerHTML = `<p>Sorry, an error occurred while fetching Hadith. Please try again.</p>`;
+                hadithResults.classList.add('show');
+            } finally {
+                loadingContainer.classList.remove('show');
+            }
+        };
+
+        async function getHadithFromAI() {
+            const hadithCount = document.getElementById('hadithCount').value;
+            const topics = Array.from(selectedCategories).join(', ');
+            
+            // Handle multiple collections
+            let collectionInstruction = '';
+            if (selectedCollections.size === 0 || selectedCollections.size === 8) {
+                collectionInstruction = 'Use any major Hadith collection.';
+            } else {
+                const collections = Array.from(selectedCollections);
+                if (collections.length === 1) {
+                    collectionInstruction = `Prioritize Hadith from ${collections[0] === 'bukhari' ? 'Sahih Bukhari' : collections[0] === 'muslim' ? 'Sahih Muslim' : collections[0]}.`;
+                } else {
+                    const collectionNames = collections.map(c => {
+                        switch(c) {
+                            case 'bukhari': return 'Sahih Bukhari';
+                            case 'muslim': return 'Sahih Muslim';
+                            case 'tirmidhi': return 'Jami\' at-Tirmidhi';
+                            case 'abudawud': return 'Sunan Abu Dawud';
+                            case 'nasai': return 'Sunan an-Nasa\'i';
+                            case 'ibnmajah': return 'Sunan Ibn Majah';
+                            case 'malik': return 'Muwatta Malik';
+                            case 'ahmad': return 'Musnad Ahmad';
+                            default: return c;
+                        }
+                    });
+                    collectionInstruction = `Focus on Hadith from these collections: ${collectionNames.join(', ')}.`;
+                }
+            }
+            
+            // Handle multiple lengths
+            let lengthInstruction = '';
+            if (selectedLengths.size === 0 || selectedLengths.size === 3) {
+                lengthInstruction = 'Include Hadith of varying lengths.';
+            } else {
+                const lengths = Array.from(selectedLengths);
+                if (lengths.length === 1) {
+                    switch(lengths[0]) {
+                        case 'short':
+                            lengthInstruction = 'Focus on short, concise Hadith (1-2 sentences).';
+                            break;
+                        case 'medium':
+                            lengthInstruction = 'Focus on medium-length Hadith (2-4 sentences).';
+                            break;
+                        case 'long':
+                            lengthInstruction = 'Focus on longer, more detailed Hadith with comprehensive teachings.';
+                            break;
+                    }
+                } else {
+                    const lengthDescriptions = [];
+                    if (lengths.includes('short')) lengthDescriptions.push('short (1-2 sentences)');
+                    if (lengths.includes('medium')) lengthDescriptions.push('medium (2-4 sentences)');
+                    if (lengths.includes('long')) lengthDescriptions.push('long, detailed');
+                    lengthInstruction = `Include a mix of ${lengthDescriptions.join(', ')} Hadith.`;
+                }
+            }
+            
+            const prompt = `Provide ${hadithCount} authentic Hadith related to the topic(s) of: ${topics}.
+            ${collectionInstruction}
+            ${lengthInstruction}
+            Format the response as a JSON array of objects. Each object must have these exact keys: "collection", "arabic", "translation", "narrator", "reference", and "grade".
+            Provide only the raw JSON array, with no other text or explanations.`;
+
+            const requestBody = {
+                contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json", temperature: 0.4 }
+            };
+            const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+            const data = await response.json();
+            return JSON.parse(data.candidates[0].content.parts[0].text);
+        }
+
+        const displayHadith = (hadithArray) => {
+            hadithContainer.innerHTML = '';
+            const showArabic = document.getElementById('showArabic').checked;
+            const showNarrator = document.getElementById('showNarrator').checked;
+
+            if (!hadithArray || hadithArray.length === 0) {
+                 hadithContainer.innerHTML = `<p>No Hadith found for the selected criteria. Please try a different selection.</p>`;
+            } else {
+                hadithArray.forEach(hadith => {
+                    const card = document.createElement('div');
+                    card.className = 'hadith-card';
+                    card.innerHTML = `
+                        <div class="hadith-header">
+                            <div class="hadith-collection">${hadith.collection || 'Unknown'}</div>
+                            <div class="hadith-grade">${hadith.grade || 'Authentic'}</div>
+                        </div>
+                        ${showArabic && hadith.arabic ? `<div class="hadith-arabic">${hadith.arabic}</div>` : ''}
+                        <div class="hadith-translation">"${hadith.translation || 'N/A'}"</div>
+                        ${showNarrator && hadith.narrator ? `<div class="hadith-narrator"><strong>Narrator:</strong> ${hadith.narrator}</div>` : ''}
+                        <div class="hadith-reference"><strong>Reference:</strong> ${hadith.reference || 'N/A'}</div>
+                    `;
+                    hadithContainer.appendChild(card);
+                });
+            }
+            hadithResults.classList.add('show');
+            hadithResults.scrollIntoView({ behavior: 'smooth' });
+        };
+        
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

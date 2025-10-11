@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamic AI Assistant - Ask Questions About Islam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #f093fb;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --text-on-brand: #ffffff;
+            --surface-primary: rgba(255, 255, 255, 0.95);
+            --surface-secondary: #f9fafb;
+            --surface-tertiary: #ffffff;
+            --border-primary: rgba(255, 255, 255, 0.2);
+            --border-secondary: #d1d5db;
+            --border-interactive: #9ca3af;
+            --brand-primary-start: #667eea;
+            --brand-primary-end: #764ba2;
+            --success: #10b981;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --interactive-bg-hover: #f3f4f6;
+            --interactive-bg-active: #ffffff;
+            --slider-bg: #ccc;
+        }
+
+        html[data-theme="dark"] {
+            /* Dark Theme Overrides */
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --surface-primary: rgba(31, 41, 55, 0.9);
+            --surface-secondary: #1f2937;
+            --surface-tertiary: #374151;
+            --border-primary: rgba(255, 255, 255, 0.1);
+            --border-secondary: #4b5563;
+            --border-interactive: #6b7280;
+            --brand-primary-start: #8b9dff;
+            --brand-primary-end: #a280d9;
+            --shadow-color: rgba(0, 0, 0, 0.25);
+            --interactive-bg-hover: #4b5563;
+            --interactive-bg-active: #1f2937;
+            --slider-bg: #6b7280;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+
+        /* Generic Card Style */
+        .card {
+            background: var(--surface-primary);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px var(--shadow-color);
+            border: 1px solid var(--border-primary);
+            transition: all 0.3s ease;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Header - Standardized across all pages */
+        .header-content { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            flex-wrap: wrap; 
+            gap: 1rem; 
+        }
+        .header-brand { 
+            flex: 0 0 350px;
+            min-width: 0; 
+        }
+        .header-brand h1 { 
+            font-size: 1.875rem; 
+            font-weight: 700; 
+            background: linear-gradient(135deg, var(--brand-primary-start), var(--brand-primary-end)); 
+            -webkit-background-clip: text; 
+            background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            margin-bottom: 0.25rem; 
+            line-height: 1.2;
+        }
+        .header-subtitle { 
+            color: var(--text-secondary); 
+            font-size: 1rem; 
+            line-height: 1.4;
+            max-width: 400px;
+        }
+        .header-actions { 
+            display: flex; 
+            gap: 0.75rem; 
+            align-items: center; 
+            flex-wrap: nowrap; 
+            flex-shrink: 0;
+        }
+        .header-actions .btn { 
+            white-space: nowrap; 
+            min-width: fit-content; 
+        }
+
+        /* Buttons */
+        .btn { padding: 0.75rem 1.25rem; border: none; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: var(--brand-primary-start); color: var(--text-on-brand); }
+        .btn-primary:hover { background: var(--brand-primary-end); transform: translateY(-2px); box-shadow: 0 4px 8px var(--shadow-color); }
+        .btn-secondary { background: var(--surface-tertiary); color: var(--text-secondary); border: 1px solid var(--border-secondary); }
+        .btn-secondary:hover { background: var(--interactive-bg-hover); transform: translateY(-1px); }
+
+        /* Settings Panel */
+        .settings-panel { display: none; margin-bottom: 1rem; }
+        .settings-panel.active { display: block; }
+        .settings-tabs { display: flex; border-bottom: 1px solid var(--border-secondary); margin-bottom: 1rem; }
+        .settings-tab { padding: 0.75rem 1rem; border: none; background: none; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.3s ease; }
+        .settings-tab.active { color: var(--brand-primary-start); border-bottom-color: var(--brand-primary-start); }
+        .settings-section { display: none; }
+        .settings-section.active { display: block; }
+        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .setting-group h3 { margin-bottom: 1rem; color: var(--text-primary); font-size: 1.125rem; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .setting-label { font-weight: 500; color: var(--text-primary); }
+        .setting-control { padding: 0.5rem; border: 1px solid var(--border-secondary); border-radius: 0.375rem; background: var(--surface-tertiary); color: var(--text-primary); }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--slider-bg); transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--brand-primary-start); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Chat Interface */
+        .chat-container { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            min-height: 600px; 
+        }
+        .chat-header { 
+            padding-bottom: 1rem; 
+            border-bottom: 1px solid var(--border-secondary); 
+            margin-bottom: 1rem; 
+        }
+        .chat-status { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            font-size: 0.875rem; 
+            color: var(--text-secondary); 
+        }
+        .status-indicator { 
+            width: 8px; 
+            height: 8px; 
+            background: var(--success); 
+            border-radius: 50%; 
+            animation: pulse 2s infinite; 
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .suggested-questions { 
+            margin-bottom: 1rem; 
+            padding-bottom: 1rem; 
+            border-bottom: 1px solid var(--border-secondary); 
+        }
+        .suggested-questions h3 { 
+            margin-bottom: 0.75rem; 
+            font-size: 1rem; 
+            color: var(--text-primary); 
+        }
+        .question-chips { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 0.5rem; 
+        }
+        .question-chip { 
+            background: var(--surface-secondary); 
+            padding: 0.5rem 0.75rem; 
+            border-radius: 1rem; 
+            font-size: 0.875rem; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            border: 1px solid var(--border-secondary); 
+        }
+        .question-chip:hover { 
+            background: var(--brand-primary-start); 
+            color: white; 
+            transform: translateY(-1px); 
+        }
+
+        .chat-messages { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding-right: 0.5rem; 
+            margin-bottom: 1rem; 
+        }
+        .welcome-message { 
+            text-align: center; 
+            padding: 2rem; 
+            color: var(--text-secondary); 
+        }
+        .welcome-icon { 
+            font-size: 3rem; 
+            margin-bottom: 1rem; 
+        }
+        .welcome-text { 
+            font-size: 1.5rem; 
+            font-weight: 600; 
+            color: var(--text-primary); 
+            margin-bottom: 0.5rem; 
+        }
+        .welcome-subtext { 
+            font-size: 1rem; 
+        }
+
+        .message { 
+            display: flex; 
+            gap: 0.75rem; 
+            margin-bottom: 1rem; 
+            align-items: flex-start; 
+        }
+        .message.user { 
+            flex-direction: row-reverse; 
+        }
+        .message-avatar { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 1.125rem; 
+            flex-shrink: 0; 
+        }
+        .message.user .message-avatar { 
+            background: var(--brand-primary-start); 
+            color: white; 
+        }
+        .message.ai .message-avatar { 
+            background: var(--surface-secondary); 
+            color: var(--text-primary); 
+        }
+        .message-content { 
+            max-width: 70%; 
+            padding: 0.75rem 1rem; 
+            border-radius: 1rem; 
+            background: var(--surface-secondary); 
+            border: 1px solid var(--border-secondary); 
+            line-height: 1.6;
+        }
+        .message.user .message-content { 
+            background: var(--brand-primary-start); 
+            color: white; 
+            border-color: var(--brand-primary-start); 
+        }
+
+        /* AI Response Formatting Styles */
+        .message-content p {
+            margin: 0 0 1rem 0;
+        }
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+        .message-content strong {
+            font-weight: 600;
+            color: var(--brand-primary-start);
+        }
+        .message.user .message-content strong {
+            color: white;
+            font-weight: 700;
+        }
+        .list-item {
+            margin: 0.5rem 0;
+            padding-left: 0;
+        }
+        .list-item.numbered {
+            margin-left: 0;
+        }
+        .list-item.bulleted {
+            margin-left: 1rem;
+        }
+        .list-number {
+            font-weight: 600;
+            color: var(--brand-primary-start);
+        }
+        .message.user .list-number {
+            color: white;
+        }
+        .bullet {
+            color: var(--brand-primary-start);
+            font-weight: bold;
+        }
+        .message.user .bullet {
+            color: white;
+        }
+
+        .typing-indicator { 
+            display: none; 
+        }
+        .typing-indicator.show { 
+            display: block; 
+        }
+        .typing-dots { 
+            display: flex; 
+            gap: 0.25rem; 
+            align-items: center; 
+        }
+        .typing-dot { 
+            width: 8px; 
+            height: 8px; 
+            border-radius: 50%; 
+            background: var(--text-secondary); 
+            animation: typing 1.4s infinite ease-in-out; 
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        .chat-input { 
+            border-top: 1px solid var(--border-secondary); 
+            padding-top: 1rem; 
+        }
+        .input-container { 
+            display: flex; 
+            gap: 0.75rem; 
+            align-items: flex-end; 
+        }
+        .input-field { 
+            flex: 1; 
+            padding: 0.75rem; 
+            border: 1px solid var(--border-secondary); 
+            border-radius: 0.5rem; 
+            background: var(--surface-tertiary); 
+            color: var(--text-primary); 
+            resize: none; 
+            font-family: inherit; 
+            font-size: 0.875rem; 
+            line-height: 1.5; 
+            max-height: 120px; 
+        }
+        .input-field:focus { 
+            outline: none; 
+            border-color: var(--brand-primary-start); 
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); 
+        }
+        .send-btn { 
+            padding: 0.75rem; 
+            background: var(--brand-primary-start); 
+            color: white; 
+            border: none; 
+            border-radius: 0.5rem; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            transition: all 0.3s ease; 
+            min-width: 48px; 
+            height: 48px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .send-btn:hover { 
+            background: var(--brand-primary-end); 
+            transform: translateY(-1px); 
+        }
+        .send-btn:disabled { 
+            opacity: 0.6; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header-content { flex-direction: column; text-align: center; align-items: center; }
+            .header-brand { text-align: center; }
+            .header-actions { gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+            .header-actions .btn { font-size: 0.875rem; padding: 0.5rem 0.75rem; }
+            .chat-container { min-height: 500px; }
+            .message-content { max-width: 85%; }
+            .question-chips { justify-content: center; }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+    <div class="container">
+        <header class="header card">
+            <div class="header-content">
+                <div class="header-brand">
+                    <h1>🤖 Islamic AI Assistant</h1>
+                    <div class="header-subtitle">Ask questions about Islam and Islamic teachings</div>
+                </div>
+                <div class="header-actions">
+                    <a href="quran.html" class="btn btn-secondary">📖 Quran</a>
+                    <a href="prayer-times.html" class="btn btn-secondary">🕌 Prayer Times</a>
+                    <a href="hadith-explorer.html" class="btn btn-secondary">📚 Hadith</a>
+                    <a href="islamic-ai.html" class="btn btn-secondary">🤖 Ask AI</a>
+                    <button class="btn btn-secondary" onclick="toggleSettings()">⚙️ Settings</button>
+                    <button id="themeToggle" class="btn btn-secondary" onclick="toggleDarkMode()">☀️</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="settings-panel card" id="settingsPanel">
+            <div class="settings-tabs">
+                <button class="settings-tab active" onclick="showSettingsTab('display', this)">🎨 Display</button>
+                <button class="settings-tab" onclick="showSettingsTab('ai', this)">🤖 AI Settings</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section active" id="display-settings">
+                    <div class="settings-grid">
+                        <div class="setting-group">
+                            <h3>Appearance</h3>
+                            <div class="setting-item">
+                                <label class="setting-label">Font Size</label>
+                                <select id="fontSizeSelect" class="setting-control" onchange="changeFontSize()">
+                                    <option value="14px">Small</option>
+                                    <option value="16px" selected>Medium</option>
+                                    <option value="18px">Large</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section" id="ai-settings">
+                    <div class="settings-grid">
+                        <div class="setting-group">
+                            <h3>AI Configuration</h3>
+                            <div class="setting-item">
+                                <label class="setting-label">Response Style</label>
+                                <select id="responseStyle" class="setting-control">
+                                    <option value="detailed">Detailed</option>
+                                    <option value="concise" selected>Concise</option>
+                                    <option value="scholarly">Scholarly</option>
+                                </select>
+                            </div>
+                            <div class="setting-item">
+                                <label class="setting-label">Include Quranic Verses</label>
+                                <label class="switch">
+                                    <input type="checkbox" id="includeVerses" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <main class="chat-container card">
+             <div class="chat-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h2>💬 Chat with Islamic AI</h2>
+                    <button id="clearChat" class="btn btn-secondary" style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">🗑️ Clear Chat</button>
+                </div>
+                <div class="chat-status">
+                    <div class="status-indicator"></div>
+                    <span>AI is online and ready to help</span>
+                </div>
+            </div>
+            <div class="suggested-questions">
+                <h3>💡 Popular Questions</h3>
+                <div class="question-chips">
+                    <div class="question-chip" onclick="askPredefinedQuestion('What are the Five Pillars of Islam?')">What are the Five Pillars of Islam?</div>
+                    <div class="question-chip" onclick="askPredefinedQuestion('How should I perform Wudu (ablution)?')">How should I perform Wudu?</div>
+                    <div class="question-chip" onclick="askPredefinedQuestion('How do I pray Salah step by step?')">How to pray Salah?</div>
+                    <div class="question-chip" onclick="askPredefinedQuestion('What should I do during Ramadan?')">Ramadan guidance</div>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <div class="welcome-icon">🕌</div>
+                    <div class="welcome-text">Assalamu Alaikum!</div>
+                    <div class="welcome-subtext">Ask me anything about Islam, the Quran, or Hadith.</div>
+                </div>
+            </div>
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="message ai">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <div class="input-container">
+                    <textarea id="messageInput" class="input-field" placeholder="Ask me anything about Islam..." rows="1"></textarea>
+                    <button id="sendBtn" class="send-btn">➤</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggleButton = document.getElementById('themeToggle');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const clearBtn = document.getElementById('clearChat');
+        const chatMessages = document.getElementById('chatMessages');
+        const typingIndicator = document.getElementById('typingIndicator');
+        
+        // IMPORTANT: Storing API keys in client-side code is a major security risk.
+        // This key can be easily stolen. For a real application, this call should be
+        // made from a secure backend server that hides the key.
+        const GEMINI_API_KEY = 'AIzaSyA6QVJgjdRb_BpFMXG3zRlYixbOz0cO8ZM';
+        const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        let conversationHistory = [];
+        let isTyping = false;
+
+        const ISLAMIC_SYSTEM_PROMPT = `You are an Islamic AI assistant specializing in Islamic knowledge, Quran, Hadith, and Islamic teachings. Provide accurate, authentic information based on the Quran and authentic Hadith. Be respectful of different Islamic schools of thought. When uncertain, suggest consulting qualified Islamic scholars. Never provide religious rulings (Fatwa). Maintain Islamic etiquette (Adab) in all responses.`;
+
+        // --- THEME & SETTINGS MANAGEMENT ---
+        const getPreferredTheme = () => localStorage.getItem('theme') || 'dark';
+        const setTheme = (theme) => {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeToggleButton.textContent = theme === 'dark' ? '☀️' : '🌙';
+        };
+
+        function toggleDarkMode() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'light' ? 'dark' : 'light');
+        }
+
+        function toggleSettings() { 
+            document.getElementById('settingsPanel').classList.toggle('active'); 
+        }
+        
+        function showSettingsTab(tabName, element) {
+            document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`${tabName}-settings`).classList.add('active');
+            element.classList.add('active');
+        }
+        
+        function changeFontSize() {
+            const fontSize = document.getElementById('fontSizeSelect').value;
+            document.body.style.fontSize = fontSize;
+            localStorage.setItem('fontSize', fontSize);
+        }
+
+        // --- CHAT FUNCTIONALITY ---
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = isUser ? 'U' : '🤖';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            
+            // Format the text if it's an AI response
+            if (!isUser) {
+                content.innerHTML = formatAIResponse(text);
+            } else {
+                content.textContent = text;
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            
+            // Remove welcome message if it exists
+            const welcomeMessage = chatMessages.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatAIResponse(text) {
+            // Split text into lines for processing
+            let lines = text.split('\n');
+            let formatted = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                
+                // Skip empty lines but add spacing
+                if (line === '') {
+                    if (formatted.length > 0 && formatted[formatted.length - 1] !== '<br>') {
+                        formatted.push('<br>');
+                    }
+                    continue;
+                }
+                
+                // Format bold text **text** -> <strong>text</strong>
+                line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                
+                // Check if it's a numbered list item
+                if (/^\d+\.\s/.test(line)) {
+                    line = line.replace(/^(\d+\.\s)(.*)/, '<div class="list-item numbered"><span class="list-number">$1</span>$2</div>');
+                    formatted.push(line);
+                }
+                // Check if it's a bullet point
+                else if (/^[-•*]\s/.test(line)) {
+                    line = line.replace(/^[-•*]\s(.*)/, '<div class="list-item bulleted"><span class="bullet">•</span> $1</div>');
+                    formatted.push(line);
+                }
+                // Regular paragraph
+                else {
+                    formatted.push('<p>' + line + '</p>');
+                }
+            }
+            
+            return formatted.join('');
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.classList.add('show');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.classList.remove('show');
+        }
+
+        async function sendMessage(message = null) {
+            const text = message || messageInput.value.trim();
+            if (!text || isTyping) return;
+
+            isTyping = true;
+            sendBtn.disabled = true;
+            
+            addMessage(text, true);
+            if (!message) messageInput.value = '';
+            
+            showTypingIndicator();
+
+            try {
+                const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: `${ISLAMIC_SYSTEM_PROMPT}\n\nUser question: ${text}`
+                            }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I could not process your request.';
+                
+                hideTypingIndicator();
+                addMessage(aiResponse);
+                
+            } catch (error) {
+
+                hideTypingIndicator();
+                addMessage('Sorry, there was an error processing your request. Please try again.');
+            }
+
+            isTyping = false;
+            sendBtn.disabled = false;
+        }
+
+        function askPredefinedQuestion(question) {
+            sendMessage(question);
+        }
+
+        function clearChat() {
+            chatMessages.innerHTML = `
+                <div class="welcome-message">
+                    <div class="welcome-icon">🕌</div>
+                    <div class="welcome-text">Assalamu Alaikum!</div>
+                    <div class="welcome-subtext">Ask me anything about Islam, the Quran, or Hadith.</div>
+                </div>
+            `;
+            conversationHistory = [];
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', () => sendMessage());
+        clearBtn.addEventListener('click', clearChat);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Initialize theme
+        setTheme(getPreferredTheme());
+        
+        // Load saved font size
+        const savedFontSize = localStorage.getItem('fontSize');
+        if (savedFontSize) {
+            document.body.style.fontSize = savedFontSize;
+            document.getElementById('fontSizeSelect').value = savedFontSize;
+        }
+    </script>
+</body>
+</html>
