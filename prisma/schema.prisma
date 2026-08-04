@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HighlightColor {
+  SAND
+  OLIVE
+  ROSE
+  SKY
+  LAVENDER
+}
+
+enum ReadingUnit {
+  SURAH
+  JUZ
+  PAGE
+  VERSE
+}
+
+enum HistoryAction {
+  OPEN
+  READ
+  LISTEN
+  SEARCH
+}
+
+model User {
+  id            String           @id @default(cuid())
+  name          String?
+  email         String?          @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  preferences   UserPreference?
+  bookmarks     Bookmark[]
+  highlights    Highlight[]
+  notes         Note[]
+  collections   Collection[]
+  history       ReadingHistory[]
+  goals         ReadingGoal[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  displayName String?
+  timezone    String?  @default("UTC")
+  locale      String   @default("en")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt   DateTime @updatedAt
+}
+
+model Surah {
+  id                 Int      @id
+  arabicName         String
+  transliteratedName String
+  translatedName     String
+  revelationType     String
+  ayahCount          Int
+  ayahs              Ayah[]
+  updatedAt          DateTime @updatedAt
+}
+
+model Ayah {
+  id              Int               @id
+  surahId         Int
+  numberInSurah   Int
+  textUthmani     String            @db.Text
+  juz             Int
+  hizbQuarter     Int
+  page            Int
+  surah           Surah             @relation(fields: [surahId], references: [id], onDelete: Cascade)
+  translations    AyahTranslation[]
+  audioFiles      AudioFile[]
+  bookmarks       Bookmark[]
+  highlights      Highlight[]
+  notes           Note[]
+  collectionItems CollectionItem[]
+
+  @@unique([surahId, numberInSurah])
+  @@index([juz, page])
+}
+
+model Translation {
+  id       String            @id
+  language String
+  name     String
+  author   String?
+  license  String?
+  ayahs    AyahTranslation[]
+}
+
+model AyahTranslation {
+  ayahId        Int
+  translationId String
+  text          String      @db.Text
+  ayah          Ayah        @relation(fields: [ayahId], references: [id], onDelete: Cascade)
+  translation   Translation @relation(fields: [translationId], references: [id], onDelete: Cascade)
+
+  @@id([ayahId, translationId])
+}
+
+model Reciter {
+  id         String      @id
+  name       String
+  language   String      @default("ar")
+  style      String?
+  audioFiles AudioFile[]
+}
+
+model AudioFile {
+  id          String  @id @default(cuid())
+  ayahId      Int
+  reciterId   String
+  storageKey  String
+  durationMs  Int?
+  bitrateKbps Int?
+  ayah        Ayah    @relation(fields: [ayahId], references: [id], onDelete: Cascade)
+  reciter     Reciter @relation(fields: [reciterId], references: [id], onDelete: Cascade)
+
+  @@unique([ayahId, reciterId])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  ayahId    Int
+  folder    String?  @db.VarChar(80)
+  tags      String[] @default([])
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ayah      Ayah     @relation(fields: [ayahId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, ayahId])
+  @@index([userId, createdAt])
+}
+
+model Highlight {
+  id        String         @id @default(cuid())
+  userId    String
+  ayahId    Int
+  color     HighlightColor
+  startWord Int?
+  endWord   Int?
+  createdAt DateTime       @default(now())
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ayah      Ayah           @relation(fields: [ayahId], references: [id], onDelete: Cascade)
+
+  @@index([userId, ayahId])
+}
+
+model Note {
+  id              String           @id @default(cuid())
+  userId          String
+  ayahId          Int?
+  title           String?          @db.VarChar(140)
+  body            String           @db.Text
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ayah            Ayah?            @relation(fields: [ayahId], references: [id], onDelete: SetNull)
+  collectionItems CollectionItem[]
+
+  @@index([userId, updatedAt])
+}
+
+model Collection {
+  id          String           @id @default(cuid())
+  userId      String
+  name        String           @db.VarChar(80)
+  description String?          @db.VarChar(280)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       CollectionItem[]
+
+  @@unique([userId, name])
+}
+
+model CollectionItem {
+  id           String     @id @default(cuid())
+  collectionId String
+  ayahId       Int?
+  noteId       String?
+  createdAt    DateTime   @default(now())
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  ayah         Ayah?      @relation(fields: [ayahId], references: [id], onDelete: Cascade)
+  note         Note?      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([collectionId, createdAt])
+}
+
+model UserPreference {
+  userId          String   @id
+  theme           String   @default("system")
+  contentLanguage String   @default("en")
+  showTranslation Boolean  @default(false)
+  translationIds  String[] @default(["en.sahih"])
+  fontScale       Float    @default(1)
+  lineHeight      Float    @default(1.9)
+  readingWidth    String   @default("comfortable")
+  reducedMotion   Boolean  @default(false)
+  highContrast    Boolean  @default(false)
+  studyState      Json?
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  updatedAt       DateTime @updatedAt
+}
+
+model ReadingHistory {
+  id         String        @id @default(cuid())
+  userId     String
+  ayahId     Int?
+  action     HistoryAction
+  occurredAt DateTime      @default(now())
+  position   Json?
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+}
+
+model ReadingGoal {
+  id        String      @id @default(cuid())
+  userId    String
+  unit      ReadingUnit
+  target    Int
+  completed Int         @default(0)
+  startsAt  DateTime
+  endsAt    DateTime
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, endsAt])
+}
+
+model SearchIndex {
+  id        String   @id
+  entity    String
+  entityId  String
+  language  String
+  text      String   @db.Text
+  metadata  Json
+  updatedAt DateTime @updatedAt
+
+  @@unique([entity, entityId, language])
+}

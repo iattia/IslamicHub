@@ -1,0 +1,284 @@
+"use client";
+
+import Link from "next/link";
+import { Check, Search, Settings2, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { AppearancePicker } from "@/components/appearance-picker";
+import { useContentLanguage } from "@/components/content-language-provider";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const primaryLinks = [
+  {
+    href: "/reader/1",
+    label: "Quran",
+    arabicLabel: "القرآن",
+    match: "/reader",
+  },
+  {
+    href: "/study/hadith",
+    label: "Hadith",
+    arabicLabel: "الحديث",
+    match: "/study/hadith",
+  },
+  {
+    href: "/study/azkaar",
+    label: "Azkaar",
+    arabicLabel: "الأذكار",
+    match: "/study/azkaar",
+  },
+  {
+    href: "/study/prayer-times",
+    label: "Prayer",
+    arabicLabel: "الصلاة",
+    match: "/study/prayer-times",
+  },
+  {
+    href: "/collections",
+    label: "Collections",
+    arabicLabel: "المجموعات",
+    match: "/collections",
+  },
+];
+
+export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
+  const { language, setLanguage, showTranslation, setShowTranslation } =
+    useContentLanguage();
+  const pathname = usePathname();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  useEffect(() => setSettingsOpen(false), [pathname]);
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const close = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSettingsOpen(false);
+    };
+    document.addEventListener("keydown", close);
+    return () => document.removeEventListener("keydown", close);
+  }, [settingsOpen]);
+  return (
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-canvas/90 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <Link
+          href="/"
+          className="group flex items-center gap-2.5 text-base font-semibold tracking-tight"
+        >
+          <span className="grid size-8 place-items-center rounded-full bg-ink font-arabic text-lg text-canvas transition-transform group-hover:rotate-12">
+            هـ
+          </span>
+          <span>IslamicHub</span>
+        </Link>
+        <nav
+          aria-label={language === "ar" ? "التنقل الرئيسي" : "Primary"}
+          dir={language === "ar" ? "rtl" : "ltr"}
+          className="hidden items-center gap-4 text-sm text-muted md:flex lg:gap-6"
+        >
+          {primaryLinks.map((link) => {
+            const active = pathname.startsWith(link.match);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative py-5 transition hover:text-ink",
+                  active && "font-medium text-ink",
+                )}
+              >
+                <span className={cn(language === "ar" && "arabic text-base")}>
+                  {language === "ar" ? link.arabicLabel : link.label}
+                </span>
+                {active && (
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-accent" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/search"
+            aria-label={language === "ar" ? "البحث في القرآن" : "Search Quran"}
+          >
+            <Button variant="ghost" size="sm">
+              <Search className="size-4" />
+              <span className={cn("hidden sm:inline", language === "ar" && "arabic text-base")}>
+                {language === "ar" ? "البحث" : "Search"}
+              </span>
+            </Button>
+          </Link>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSettingsOpen((open) => !open)}
+              aria-label={language === "ar" ? "فتح الإعدادات" : "Open settings"}
+              aria-haspopup="dialog"
+              aria-expanded={settingsOpen}
+            >
+              <Settings2 className="size-4" />
+              <span
+                className={cn(
+                  "hidden lg:inline",
+                  language === "ar" && "arabic",
+                )}
+              >
+                {language === "ar" ? "الإعدادات" : "Settings"}
+              </span>
+            </Button>
+            {settingsOpen && (
+              <div
+                role="dialog"
+                aria-label={
+                  language === "ar" ? "إعدادات التطبيق" : "Application settings"
+                }
+                lang={language}
+                dir={language === "ar" ? "rtl" : "ltr"}
+                className="absolute right-0 top-11 w-[min(21rem,calc(100vw-2rem))] rounded-2xl border border-line bg-panel p-4 shadow-xl"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p
+                      className={cn(
+                        "font-semibold",
+                        language === "ar" && "arabic text-lg",
+                      )}
+                    >
+                      {language === "ar" ? "الإعدادات" : "Settings"}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {language === "ar"
+                        ? "تتم مزامنة خيارات القراءة عند تسجيل الدخول."
+                        : "Reading choices sync when you sign in."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSettingsOpen(false)}
+                    className="grid size-8 place-items-center rounded-lg text-muted hover:bg-sand hover:text-ink"
+                    aria-label={
+                      language === "ar" ? "إغلاق الإعدادات" : "Close settings"
+                    }
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+
+                <section className="mt-5 border-t border-line pt-4">
+                  <p className="text-xs font-semibold">
+                    {language === "ar" ? "نص القراءة" : "Reading text"}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    {language === "ar"
+                      ? "اختر لغة واحدة، أو أضف الترجمة الإنجليزية إلى العربية."
+                      : "Keep one language by default, or pair English with Arabic."}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {(
+                      [
+                        ["en", language === "ar" ? "الإنجليزية" : "English"],
+                        ["ar", "العربية"],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setLanguage(value)}
+                        className={cn(
+                          "flex h-10 items-center justify-center gap-2 rounded-xl border text-sm transition",
+                          language === value
+                            ? "border-accent bg-sand text-ink"
+                            : "border-line text-muted hover:border-accent",
+                          value === "ar" && "arabic text-base",
+                        )}
+                        aria-pressed={language === value}
+                      >
+                        {language === value && <Check className="size-3.5" />}
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {language === "ar" && (
+                    <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-3">
+                      <input
+                        type="checkbox"
+                        checked={showTranslation}
+                        onChange={(event) =>
+                          setShowTranslation(event.target.checked)
+                        }
+                        className="mt-0.5 size-4 accent-current"
+                      />
+                      <span>
+                        <span className="block text-sm font-medium">
+                          {language === "ar"
+                            ? "عرض الترجمة الإنجليزية"
+                            : "Show English translation"}
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-muted">
+                          {language === "ar"
+                            ? "تظهر الترجمة الإنجليزية أسفل النص العربي."
+                            : "Places English beneath the Arabic text."}
+                        </span>
+                      </span>
+                    </label>
+                  )}
+                </section>
+
+                <section className="mt-4 border-t border-line pt-4">
+                  <p className="text-xs font-semibold">
+                    {language === "ar" ? "المظهر" : "Appearance"}
+                  </p>
+                  <div className="mt-3">
+                    <AppearancePicker language={language} />
+                  </div>
+                </section>
+              </div>
+            )}
+          </div>
+          {authEnabled ? (
+            <Link href="/sign-in">
+              <Button variant="secondary" size="sm">
+                <span className="hidden lg:inline">
+                  {language === "ar" ? "تسجيل الدخول" : "Sign in"}
+                </span>
+                <span className="lg:hidden">
+                  {language === "ar" ? "الحساب" : "Account"}
+                </span>
+              </Button>
+            </Link>
+          ) : (
+            <span className="hidden rounded-full border border-line bg-panel px-3 py-1.5 text-xs text-muted sm:inline">
+              {language === "ar" ? "حفظ محلي" : "Local mode"}
+            </span>
+          )}
+        </div>
+      </div>
+      <nav
+        aria-label={
+          language === "ar" ? "التنقل الرئيسي للجوال" : "Primary mobile"
+        }
+        dir={language === "ar" ? "rtl" : "ltr"}
+        className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 pb-2 md:hidden [scrollbar-width:none]"
+      >
+        {primaryLinks.map((link) => {
+          const active = pathname.startsWith(link.match);
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition",
+                active ? "bg-ink text-canvas" : "text-muted hover:bg-sand",
+              )}
+            >
+              <span className={cn(language === "ar" && "arabic text-sm")}>
+                {language === "ar" ? link.arabicLabel : link.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+    </header>
+  );
+}

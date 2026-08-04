@@ -1,0 +1,33 @@
+services:
+  web:
+    build: .
+    ports: ["3000:3000"]
+    env_file: .env.local
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+      meilisearch: { condition: service_started }
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: islamichub
+      POSTGRES_PASSWORD: localdev
+      POSTGRES_DB: islamichub
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U islamichub -d islamichub"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    environment: { MEILI_NO_ANALYTICS: "true", MEILI_MASTER_KEY: local-development-key-change-me }
+    ports: ["7700:7700"]
+    volumes: ["meilisearch-data:/meili_data"]
+volumes:
+  postgres-data:
+  meilisearch-data:

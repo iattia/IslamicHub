@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: 38 28% 97%;
+  --panel: 0 0% 100%;
+  --ink: 24 12% 16%;
+  --muted: 25 7% 43%;
+  --line: 28 15% 87%;
+  --sand: 38 34% 92%;
+  --accent: 30 38% 37%;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  --font-arabic: var(--font-naskh-arabic), "Noto Naskh Arabic", "Amiri", serif;
+  --font-arabic-prose: var(--font-amiri), "Amiri", "Noto Naskh Arabic", serif;
+}
+.dark {
+  --canvas: 28 9% 10%;
+  --panel: 27 8% 14%;
+  --ink: 38 22% 93%;
+  --muted: 34 11% 67%;
+  --line: 30 8% 24%;
+  --sand: 31 10% 19%;
+  --accent: 37 46% 68%;
+  color-scheme: dark;
+}
+.beige {
+  --canvas: 39 38% 91%;
+  --panel: 42 42% 96%;
+  --ink: 28 18% 16%;
+  --muted: 30 12% 38%;
+  --line: 34 24% 76%;
+  --sand: 37 36% 84%;
+  --accent: 28 40% 34%;
+  color-scheme: light;
+}
+* {
+  border-color: hsl(var(--line));
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  min-height: 100vh;
+  background: hsl(var(--canvas));
+  color: hsl(var(--ink));
+  font-family: var(--font-sans);
+  font-feature-settings:
+    "rlig" 1,
+    "calt" 1;
+}
+::selection {
+  background: hsl(var(--sand));
+  color: hsl(var(--ink));
+}
+.focus-ring:focus-visible {
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 3px;
+}
+.arabic {
+  font-family: var(--font-arabic);
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1,
+    "calt" 1;
+  direction: rtl;
+}
+.arabic-prose {
+  font-family: var(--font-arabic-prose);
+  font-feature-settings:
+    "kern" 1,
+    "liga" 1,
+    "calt" 1;
+  font-weight: 400;
+  letter-spacing: 0;
+  direction: rtl;
+  line-height: 2.2;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-rendering: optimizeLegibility;
+  text-wrap: pretty;
+}
+.paper-grid {
+  background-image:
+    linear-gradient(hsl(var(--line) / 0.28) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--line) / 0.28) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
