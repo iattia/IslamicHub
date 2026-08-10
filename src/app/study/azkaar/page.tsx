@@ -13,6 +13,9 @@ export default function AzkaarPage() {
   const [categoryId, setCategoryId] = useState(AZKAAR[0].id);
   const [showTransliteration, setShowTransliteration] = useState(true);
   const { language, showTranslation } = useContentLanguage();
+  const showArabicContent = language === "ar" || showTranslation;
+  const showEnglishContent = language === "en" || showTranslation;
+  const bilingual = showArabicContent && showEnglishContent;
   const { state, update, storage } = useStudyState();
   const category = AZKAAR.find((item) => item.id === categoryId) ?? AZKAAR[0];
   const progress = useMemo(() => {
@@ -162,7 +165,7 @@ export default function AzkaarPage() {
                   </span>
                 )}
               </div>
-              {language === "ar" && (
+              {showArabicContent && (
                 <p
                   lang="ar"
                   dir="rtl"
@@ -176,11 +179,11 @@ export default function AzkaarPage() {
                   {item.transliteration}
                 </p>
               )}
-              {(language === "en" || showTranslation) && (
+              {showEnglishContent && (
                 <p
                   className={cn(
                     "text-[17px] leading-8 text-ink/80",
-                    language === "ar"
+                    bilingual
                       ? "mt-5 border-t border-line pt-5 text-muted"
                       : "mt-4",
                   )}
