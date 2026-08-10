@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Amiri, Noto_Naskh_Arabic } from "next/font/google";
+import { Amiri, Amiri_Quran, Noto_Naskh_Arabic } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { PwaRegistration } from "@/components/pwa-registration";
 import { SiteHeader } from "@/components/site-header";
@@ -17,6 +17,13 @@ const amiri = Amiri({
   subsets: ["arabic"],
   weight: "400",
   variable: "--font-amiri",
+  display: "swap",
+});
+
+const amiriQuran = Amiri_Quran({
+  subsets: ["arabic"],
+  weight: "400",
+  variable: "--font-amiri-quran",
   display: "swap",
 });
 
@@ -48,8 +55,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${notoNaskhArabic.variable} ${amiri.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      data-scroll-behavior="smooth"
+      className={`${notoNaskhArabic.variable} ${amiri.variable} ${amiriQuran.variable}`}
+    >
+      <body>
         <Providers>
           <PwaRegistration />
           <SiteHeader authEnabled={authEnabled} />
