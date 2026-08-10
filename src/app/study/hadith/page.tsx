@@ -29,6 +29,9 @@ export default function HadithPage() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const { language, showTranslation } = useContentLanguage();
+  const showArabicContent = language === "ar" || showTranslation;
+  const showEnglishContent = language === "en" || showTranslation;
+  const bilingual = showArabicContent && showEnglishContent;
   const { state, update, storage } = useStudyState();
   const collections = useQuery({
     queryKey: ["hadith-collections"],
@@ -221,7 +224,7 @@ export default function HadithPage() {
                       <Bookmark className="size-4" /> {saved ? "Saved" : "Save"}
                     </Button>
                   </div>
-                  {language === "ar" && hadith.arabic && (
+                  {showArabicContent && hadith.arabic && (
                     <p
                       lang="ar"
                       dir="rtl"
@@ -230,11 +233,11 @@ export default function HadithPage() {
                       {hadith.arabic}
                     </p>
                   )}
-                  {(language === "en" || showTranslation) && hadith.english && (
+                  {showEnglishContent && hadith.english && (
                     <p
                       className={cn(
                         "text-[17px] leading-8 text-ink/80",
-                        language === "ar"
+                        bilingual
                           ? "mt-5 border-t border-line pt-5 text-muted"
                           : "mt-7",
                       )}
@@ -242,7 +245,7 @@ export default function HadithPage() {
                       {hadith.english}
                     </p>
                   )}
-                  {language === "en" && hadith.grades.length > 0 && (
+                  {showEnglishContent && hadith.grades.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {hadith.grades.map((grade) => (
                         <span

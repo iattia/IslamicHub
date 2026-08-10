@@ -24,6 +24,7 @@ import type { MushafAyah, MushafPage as MushafPageData } from "@/types/quran";
 import { TajweedText } from "./tajweed-text";
 
 const LAST_MUSHAF_PAGE = 604;
+const MUSHAF_FONT_SIZE_KEY = "islamichub:mushaf-font-size";
 const BISMILLAH =
   "بِسْمِ [h:1[ٱ]للَّهِ [h:2[ٱ][l[ل]رَّحْمَ[n[ـٰ]نِ [h:3[ٱ][l[ل]رَّح[p[ِي]مِ";
 
@@ -52,6 +53,7 @@ export function MushafView({
   const [page, setPage] = useState(initialPage);
   const [spread, setSpread] = useState<1 | 2>(1);
   const [fontSize, setFontSize] = useState(25);
+  const [fontSizeReady, setFontSizeReady] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [audioIndex, setAudioIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -106,6 +108,22 @@ export function MushafView({
   useEffect(() => {
     if (open) setPage(initialPage);
   }, [initialPage, open]);
+
+  useEffect(() => {
+    try {
+      const storedFontSize = Number(localStorage.getItem(MUSHAF_FONT_SIZE_KEY));
+      if (Number.isFinite(storedFontSize) && storedFontSize > 0) {
+        setFontSize(Math.min(72, Math.max(18, storedFontSize)));
+      }
+    } finally {
+      setFontSizeReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!fontSizeReady) return;
+    localStorage.setItem(MUSHAF_FONT_SIZE_KEY, String(fontSize));
+  }, [fontSize, fontSizeReady]);
 
   useEffect(() => {
     audioRef.current?.pause();
@@ -477,7 +495,7 @@ function MushafSheet({
       <div
         lang="ar"
         dir="rtl"
-        className="arabic min-h-0 flex-1 overflow-y-auto text-justify leading-[2.05] [scrollbar-width:thin]"
+        className="quran-arabic min-h-0 flex-1 overflow-y-auto text-justify leading-[2.15] [scrollbar-width:thin]"
         style={{ fontSize: `${fontSize}px` }}
       >
         {data.ayahs.map((ayah) => (
@@ -527,8 +545,10 @@ function MushafAyahText({
           active && "bg-accent/10",
         )}
       />{" "}
-      <span className="mx-1 inline-grid size-[1.8em] place-items-center rounded-full border border-accent/40 align-middle text-[.5em] text-accent">
-        {new Intl.NumberFormat("ar-EG").format(ayah.number)}
+      <span className="mx-1 inline-grid size-[1.8em] place-items-center rounded-full border border-accent/40 align-middle font-sans text-[.5em] leading-none text-accent">
+        <span className="relative -top-[.04em] leading-none">
+          {new Intl.NumberFormat("ar-EG").format(ayah.number)}
+        </span>
       </span>{" "}
     </span>
   );

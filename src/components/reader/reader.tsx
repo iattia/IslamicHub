@@ -8,6 +8,7 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Copy,
   Expand,
   Headphones,
   Pause,
@@ -34,6 +35,7 @@ const BISMILLAH =
   "بِسْمِ [h:1[ٱ]للَّهِ [h:2[ٱ][l[ل]رَّحْمَ[n[ـٰ]نِ [h:3[ٱ][l[ل]رَّح[p[ِي]مِ";
 const TRANSLATION_ID = "en.sahih";
 const ARABIC_RECITER = "مشاري راشد العفاسي";
+const READER_FONT_SIZE_KEY = "islamichub:reader-font-size";
 async function getJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) throw new Error("The Quran could not be loaded right now.");
@@ -54,16 +56,13 @@ function ArabicVerse({
     <p
       lang="ar"
       dir="rtl"
-      className="arabic text-right leading-[2.15] tracking-[.015em]"
+      className="quran-arabic text-right leading-[2.25] tracking-[.01em]"
       style={{ fontSize: `${size}px` }}
     >
       <TajweedText
         value={verse.tajweed}
         enabled={tajweed}
-        className={cn(
-          "rounded-md py-[.2em] transition-colors duration-500 [box-decoration-break:clone] [-webkit-box-decoration-break:clone]",
-          active && "bg-accent/10",
-        )}
+        className={cn("transition-colors duration-500", active && "text-ink")}
       />
     </p>
   );
@@ -77,7 +76,8 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
   );
   const [fontSize, setFontSize] = useState(33);
   const [wide, setWide] = useState(false);
-  const [tajweed, setTajweed] = useState(false);
+  const [tajweed, setTajweed] = useState(true);
+  const [tajweedReady, setTajweedReady] = useState(false);
   const [mushafOpen, setMushafOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [audioIndex, setAudioIndex] = useState<number | null>(null);
@@ -131,14 +131,26 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
           JSON.parse(localStorage.getItem("islamichub:bookmarks") ?? "[]"),
         ),
       );
-      setTajweed(localStorage.getItem("islamichub:tajweed") === "true");
+      const storedTajweed = localStorage.getItem("islamichub:tajweed");
+      setTajweed(storedTajweed === null ? true : storedTajweed === "true");
+      const storedFontSize = Number(localStorage.getItem(READER_FONT_SIZE_KEY));
+      if (Number.isFinite(storedFontSize) && storedFontSize > 0) {
+        setFontSize(Math.min(72, Math.max(22, storedFontSize)));
+      }
     } catch {
       /* invalid guest cache is ignored */
+    } finally {
+      setTajweedReady(true);
     }
   }, []);
   useEffect(() => {
+    if (!tajweedReady) return;
     localStorage.setItem("islamichub:tajweed", String(tajweed));
-  }, [tajweed]);
+  }, [tajweed, tajweedReady]);
+  useEffect(() => {
+    if (!tajweedReady) return;
+    localStorage.setItem(READER_FONT_SIZE_KEY, String(fontSize));
+  }, [fontSize, tajweedReady]);
 
   async function playIndex(index: number) {
     const verse = verses[index];
@@ -179,6 +191,11 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
       return;
     }
     void playIndex(recitationStart);
+  }
+
+  function openMushaf() {
+    resetPlayback(null);
+    setMushafOpen(true);
   }
 
   function handleAudioEnded() {
@@ -229,13 +246,16 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
       </div>
     );
   const data = reader.data;
+  const showArabicContent = language === "ar" || showTranslation;
+  const showEnglishContent = language === "en" || showTranslation;
+  const bilingual = showArabicContent && showEnglishContent;
   const mushafPage = currentVerse?.page ?? verses[0]?.page ?? 1;
   return (
     <>
       <div
         className={cn(
-          "mx-auto px-4 py-7 sm:px-6 sm:py-10",
-          wide ? "max-w-[106rem]" : "max-w-5xl",
+          "mx-auto px-4 pb-20 pt-7 sm:px-6 sm:pt-10",
+          wide ? "max-w-[106rem]" : "max-w-7xl",
         )}
       >
         <audio
@@ -247,71 +267,64 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
             setAudioSession(false);
           }}
         />
-        <div className="mb-7 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-muted">
-            <Link href="/" className="hover:text-ink">
-              Quran
-            </Link>
-            <span>/</span>
-            <span
-              lang={language}
-              dir={language === "ar" ? "rtl" : "ltr"}
-              className={cn("text-ink", language === "ar" && "arabic")}
-            >
-              {language === "ar" ? data.arabicName : data.name}
-            </span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Open reader settings"
-              aria-expanded={settingsOpen}
-            >
-              <Settings className="size-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setMushafOpen(true)}
-              aria-label="Open Mushaf view"
-            >
-              <BookOpen className="size-4" />
-            </Button>
-          </div>
+        <div className="mb-8 flex items-center gap-2 text-xs text-muted">
+          <Link href="/" className="hover:text-ink">
+            {language === "ar" ? "القرآن" : "Quran"}
+          </Link>
+          <span>/</span>
+          <span
+            lang={language}
+            dir={language === "ar" ? "rtl" : "ltr"}
+            className={cn("text-ink", language === "ar" && "arabic")}
+          >
+            {language === "ar" ? data.arabicName : data.name}
+          </span>
         </div>
-        <section className="rounded-3xl border border-line bg-panel p-5 sm:p-8">
-          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+        <section>
+          <div className="flex flex-col justify-between gap-7 border-b border-line pb-8 sm:flex-row sm:items-end">
             <div lang={language} dir={language === "ar" ? "rtl" : "ltr"}>
-              <p className="text-xs font-semibold uppercase tracking-[.16em] text-accent">
+              <p
+                className={cn(
+                  "text-xs font-semibold uppercase tracking-[.16em] text-accent",
+                  language === "ar" && "arabic text-base tracking-normal",
+                )}
+              >
                 {language === "ar"
                   ? `سورة ${data.id.toLocaleString("ar-EG")} · ${data.revelationType === "Meccan" ? "مكية" : "مدنية"}`
                   : `Surah ${data.id} · ${data.revelationType}`}
               </p>
               <h1
                 className={cn(
-                  "mt-2 text-3xl font-semibold tracking-tight sm:text-4xl",
-                  language === "ar" && "arabic leading-[1.7] text-accent",
+                  "editorial mt-2 text-4xl tracking-[-.04em] sm:text-5xl",
+                  language === "ar" &&
+                    "arabic text-4xl font-medium leading-[1.7] tracking-normal text-ink sm:text-5xl",
                 )}
               >
                 {language === "ar" ? data.arabicName : data.name}
               </h1>
-              <p className="mt-2 text-sm text-muted">
+              <p
+                className={cn(
+                  "mt-2 text-sm text-muted",
+                  language === "ar" && "arabic text-base",
+                )}
+              >
                 {language === "ar"
                   ? `${data.versesCount.toLocaleString("ar-EG")} آيات`
                   : `${data.meaning} · ${data.versesCount} ayahs`}
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:flex">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <label className="sr-only" htmlFor="surah-jump">
-                Choose surah
+                {language === "ar" ? "اختر سورة" : "Choose surah"}
               </label>
               <select
                 id="surah-jump"
                 value={surahId}
                 onChange={(event) => setSurahId(Number(event.target.value))}
-                className="h-10 rounded-xl border border-line bg-canvas px-3 text-sm focus:ring-2 focus:ring-accent"
+                className={cn(
+                  "col-span-2 h-10 rounded-lg border border-line bg-panel/60 px-3 text-sm outline-none focus:ring-2 focus:ring-accent sm:col-span-1",
+                  language === "ar" && "arabic text-base",
+                )}
               >
                 {summaries.data?.map((surah) => (
                   <option value={surah.id} key={surah.id}>
@@ -326,7 +339,10 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
                 onClick={() => setSurahId((id) => Math.max(1, id - 1))}
                 disabled={surahId === 1}
               >
-                <ChevronLeft className="size-4" /> Prev
+                <ChevronLeft className="size-4" />
+                <span className={cn(language === "ar" && "arabic text-base")}>
+                  {language === "ar" ? "السابق" : "Prev"}
+                </span>
               </Button>
               <Button
                 size="sm"
@@ -334,11 +350,14 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
                 onClick={() => setSurahId((id) => Math.min(114, id + 1))}
                 disabled={surahId === 114}
               >
-                Next <ChevronRight className="size-4" />
+                <span className={cn(language === "ar" && "arabic text-base")}>
+                  {language === "ar" ? "التالي" : "Next"}
+                </span>
+                <ChevronRight className="size-4" />
               </Button>
             </div>
           </div>
-          <div className="mt-8 flex flex-wrap gap-2 border-y border-line py-3">
+          <div className="flex flex-wrap items-center gap-1 border-b border-line py-3">
             <Button
               size="sm"
               variant={playing ? "primary" : "secondary"}
@@ -349,23 +368,38 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
               ) : (
                 <Play className="size-4" />
               )}
-              {playing ? "Pause" : "Listen"}
+              <span className={cn(language === "ar" && "arabic text-base")}>
+                {language === "ar"
+                  ? playing
+                    ? "إيقاف مؤقت"
+                    : "استماع"
+                  : playing
+                    ? "Pause"
+                    : "Listen"}
+              </span>
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setMushafOpen(true)}
-            >
-              <BookOpen className="size-4" /> Mushaf
+            <Button size="sm" variant="ghost" onClick={openMushaf}>
+              <BookOpen className="size-4" />
+              <span className={cn(language === "ar" && "arabic text-base")}>
+                {language === "ar" ? "المصحف" : "Mushaf"}
+              </span>
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => setSettingsOpen(true)}
             >
-              <Settings className="size-4" /> Settings
+              <Settings className="size-4" />
+              <span className={cn(language === "ar" && "arabic text-base")}>
+                {language === "ar" ? "الإعدادات" : "Settings"}
+              </span>
             </Button>
-            <div className="ml-auto flex items-center gap-1 text-xs text-muted">
+            <div
+              className={cn(
+                "ml-auto flex items-center gap-1.5 text-xs text-muted",
+                language === "ar" && "mr-auto ml-0 arabic text-sm",
+              )}
+            >
               <Volume2 className="size-3.5" />{" "}
               <span lang={language} dir={language === "ar" ? "rtl" : "ltr"}>
                 {language === "ar" ? ARABIC_RECITER : RECITERS[0].label}
@@ -375,136 +409,187 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
                 ` · Pass ${repeatIteration + 1} of ${repeatCount}`}
             </div>
           </div>
-          {language === "ar" && data.id !== 1 && data.id !== 9 && (
-            <p
-              lang="ar"
-              dir="rtl"
-              className="arabic border-y border-line py-8 text-center text-3xl"
-            >
-              <TajweedText value={BISMILLAH} enabled={tajweed} />
-            </p>
-          )}
-          <div className="divide-y divide-line">
-            {verses.map((verse, index) => {
-              const active = audioIndex === index && playing;
-              return (
-                <motion.article
-                  key={verse.key}
-                  id={`ayah-${verse.number}`}
-                  aria-current={active ? "true" : undefined}
-                  initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: Math.min(index * 0.015, 0.2) }}
-                  className={cn(
-                    "group grid gap-4 border-l-2 border-l-transparent py-8 transition-colors duration-500 sm:grid-cols-[44px_1fr]",
-                    active && "border-l-accent",
-                  )}
-                >
-                  <div className="relative flex h-8 w-8 items-center justify-center rounded-full border border-line text-xs font-medium text-muted">
-                    {verse.number}
-                    {active && (
-                      <motion.span
-                        layoutId="playing-dot"
-                        className="absolute -right-1 -top-1 size-2.5 rounded-full bg-accent ring-4 ring-panel"
-                      />
+          <div className={cn("mx-auto", wide ? "max-w-[92rem]" : "max-w-5xl")}>
+            {showArabicContent && data.id !== 1 && data.id !== 9 && (
+              <p
+                lang="ar"
+                dir="rtl"
+                className="quran-arabic border-b border-line py-9 text-center text-3xl leading-[2.2]"
+              >
+                <TajweedText value={BISMILLAH} enabled={tajweed} />
+              </p>
+            )}
+            <div className="divide-y divide-line">
+              {verses.map((verse, index) => {
+                const active = audioIndex === index && playing;
+                return (
+                  <motion.article
+                    key={verse.key}
+                    id={`ayah-${verse.number}`}
+                    aria-current={active ? "true" : undefined}
+                    initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: Math.min(index * 0.015, 0.2) }}
+                    dir="ltr"
+                    className={cn(
+                      "group grid grid-cols-[36px_minmax(0,1fr)] gap-x-3 gap-y-2 px-1 py-8 transition-colors duration-500 sm:grid-cols-[48px_minmax(0,1fr)_44px] sm:gap-x-5 sm:px-5 sm:py-10",
+                      active && "rounded-xl bg-accent/[.07]",
                     )}
-                  </div>
-                  <div>
-                    {active && (
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-accent">
-                        Now reciting
-                      </p>
-                    )}
-                    {language === "ar" ? (
-                      <>
+                  >
+                    <div className="relative mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-line text-xs font-medium text-muted">
+                      {verse.number}
+                      {active && (
+                        <motion.span
+                          layoutId="playing-dot"
+                          className="absolute -right-1 -top-1 size-2 rounded-full bg-accent ring-[3px] ring-canvas"
+                        />
+                      )}
+                    </div>
+                    <div
+                      lang={language}
+                      dir={language === "ar" ? "rtl" : "ltr"}
+                      className="min-w-0"
+                    >
+                      {active && (
+                        <p
+                          className={cn(
+                            "mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-accent",
+                            language === "ar" &&
+                              "arabic text-sm tracking-normal",
+                          )}
+                        >
+                          {language === "ar"
+                            ? "تتم التلاوة الآن"
+                            : "Now reciting"}
+                        </p>
+                      )}
+                      {showArabicContent && (
                         <ArabicVerse
                           verse={verse}
                           size={fontSize}
                           tajweed={tajweed}
                           active={active}
                         />
-                        {showTranslation && (
-                          <p className="mt-5 border-t border-line pt-4 text-[16px] leading-8 text-muted">
-                            {verse.translations[TRANSLATION_ID]}
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-[17px] leading-8 text-ink/80">
-                        {verse.translations[TRANSLATION_ID]}
-                      </p>
-                    )}
+                      )}
+                      {showEnglishContent && (
+                        <p
+                          className={cn(
+                            "text-[17px] leading-8 text-ink/80",
+                            bilingual &&
+                              "mt-5 border-t border-line pt-4 text-[16px] text-muted",
+                          )}
+                        >
+                          {verse.translations[TRANSLATION_ID]}
+                        </p>
+                      )}
+                    </div>
                     <div
                       className={cn(
-                        "mt-4 flex items-center gap-1 transition",
+                        "col-start-2 flex items-center gap-1 pt-3 transition-opacity sm:col-start-3 sm:row-start-1 sm:flex-col sm:pt-0",
                         active
                           ? "opacity-100"
-                          : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100",
+                          : "opacity-100 sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100",
                       )}
                     >
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => startFromVerse(verse)}
-                        aria-label={`Start recitation from ayah ${verse.number}`}
-                      >
-                        <Headphones className="size-3.5" /> Start here
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={bookmarks.has(verse.key) ? "primary" : "ghost"}
-                        onClick={() => toggleBookmark(verse.key)}
-                        aria-pressed={bookmarks.has(verse.key)}
-                      >
-                        <Bookmark className="size-3.5" />{" "}
-                        {bookmarks.has(verse.key) ? "Saved" : "Save"}
-                      </Button>
                       <button
-                        className="focus-ring ml-auto text-xs text-muted hover:text-ink"
+                        type="button"
+                        onClick={() => startFromVerse(verse)}
+                        className="grid size-9 place-items-center rounded-lg text-muted transition-colors hover:bg-sand hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                        aria-label={
+                          language === "ar"
+                            ? `ابدأ التلاوة من الآية ${verse.number}`
+                            : `Start recitation from ayah ${verse.number}`
+                        }
+                        title={language === "ar" ? "ابدأ من هنا" : "Start here"}
+                      >
+                        <Headphones className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleBookmark(verse.key)}
+                        className={cn(
+                          "grid size-9 place-items-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                          bookmarks.has(verse.key)
+                            ? "bg-accent text-white dark:text-canvas"
+                            : "text-muted hover:bg-sand hover:text-ink",
+                        )}
+                        aria-label={
+                          language === "ar"
+                            ? bookmarks.has(verse.key)
+                              ? "إزالة العلامة"
+                              : "حفظ الآية"
+                            : bookmarks.has(verse.key)
+                              ? "Remove bookmark"
+                              : "Save ayah"
+                        }
+                        aria-pressed={bookmarks.has(verse.key)}
+                        title={language === "ar" ? "حفظ" : "Save"}
+                      >
+                        <Bookmark className="size-4" />
+                      </button>
+                      <button
+                        type="button"
+                        className="grid size-9 place-items-center rounded-lg text-muted transition-colors hover:bg-sand hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                         onClick={() =>
                           navigator.clipboard?.writeText(
                             `${language === "ar" ? verse.arabic : verse.translations[TRANSLATION_ID]}\nQuran ${verse.key}`,
                           )
                         }
+                        aria-label={
+                          language === "ar" ? "نسخ الآية" : "Copy ayah"
+                        }
+                        title={language === "ar" ? "نسخ" : "Copy"}
                       >
-                        Copy
+                        <Copy className="size-4" />
                       </button>
                     </div>
-                  </div>
-                </motion.article>
-              );
-            })}
+                  </motion.article>
+                );
+              })}
+            </div>
           </div>
         </section>
-        <div className="mt-6 flex justify-between">
+        <div className="mx-auto mt-6 flex max-w-5xl justify-between border-t border-line pt-5">
           <Button
             variant="quiet"
             onClick={() => setSurahId((id) => Math.max(1, id - 1))}
             disabled={surahId === 1}
           >
-            ← Previous surah
+            {language === "ar" ? "السورة السابقة ←" : "← Previous surah"}
           </Button>
           <Button
             variant="quiet"
             onClick={() => setSurahId((id) => Math.min(114, id + 1))}
             disabled={surahId === 114}
           >
-            Next surah →
+            {language === "ar" ? "السورة التالية →" : "Next surah →"}
           </Button>
         </div>
       </div>
       {audioSession && currentVerse && (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
           <div
-            className="pointer-events-auto flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-line/80 bg-panel/95 p-1.5 shadow-lg backdrop-blur"
+            className="pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-xl border border-line/80 bg-panel/95 p-1.5 shadow-[0_14px_45px_hsl(var(--ink)/.14)] backdrop-blur-xl"
             role="region"
-            aria-label="Recitation controls"
+            aria-label={
+              language === "ar"
+                ? "عناصر التحكم في التلاوة"
+                : "Recitation controls"
+            }
           >
             <button
               type="button"
               onClick={toggleAudio}
-              className="grid size-11 shrink-0 place-items-center rounded-full bg-ink text-canvas transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              aria-label={playing ? "Pause recitation" : "Resume recitation"}
+              className="grid size-10 shrink-0 place-items-center rounded-lg bg-accent text-white transition hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent dark:text-canvas"
+              aria-label={
+                language === "ar"
+                  ? playing
+                    ? "إيقاف التلاوة مؤقتًا"
+                    : "استئناف التلاوة"
+                  : playing
+                    ? "Pause recitation"
+                    : "Resume recitation"
+              }
             >
               {playing ? (
                 <Pause className="size-5" />
@@ -518,8 +603,14 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
                 {currentVerse.key}
               </p>
               <p className="truncate text-[10px] text-muted">
-                {playing ? "Reciting" : "Paused"} ·{" "}
-                {language === "ar" ? ARABIC_RECITER : RECITERS[0].label}
+                {language === "ar"
+                  ? playing
+                    ? "تتم التلاوة"
+                    : "متوقفة مؤقتًا"
+                  : playing
+                    ? "Reciting"
+                    : "Paused"}{" "}
+                · {language === "ar" ? ARABIC_RECITER : RECITERS[0].label}
                 {repeatCount > 1 &&
                   ` · Pass ${repeatIteration + 1} of ${repeatCount}`}
               </p>
@@ -528,8 +619,12 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
               type="button"
               onClick={() => resetPlayback(null)}
               className="grid size-10 shrink-0 place-items-center rounded-full text-muted transition hover:bg-sand hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              aria-label="Stop and close recitation"
-              title="Stop recitation"
+              aria-label={
+                language === "ar"
+                  ? "إيقاف التلاوة وإغلاقها"
+                  : "Stop and close recitation"
+              }
+              title={language === "ar" ? "إيقاف التلاوة" : "Stop recitation"}
             >
               <Square className="size-3.5 fill-current" />
             </button>
@@ -594,8 +689,8 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
               title={language === "ar" ? "لغة القراءة" : "Reading language"}
               description={
                 language === "ar"
-                  ? "اختر لغة واحدة لعرض الآيات. يحتفظ عرض المصحف بالصفحة العربية دائمًا."
-                  : "Keep the verse view in one language at a time. Mushaf view always preserves the Arabic page."
+                  ? "استخدم العربية وحدها، أو أضف إليها الترجمة الإنجليزية. يحتفظ عرض المصحف بالصفحة العربية دائمًا."
+                  : "Use English alone, or add the original Arabic above it. Mushaf view always preserves the Arabic page."
               }
             >
               <div className="flex flex-wrap gap-2">
@@ -622,30 +717,36 @@ export function Reader({ initialSurahId }: { initialSurahId: number }) {
                   </button>
                 ))}
               </div>
-              {language === "ar" && (
-                <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-3">
-                  <input
-                    type="checkbox"
-                    checked={showTranslation}
-                    onChange={(event) =>
-                      setShowTranslation(event.target.checked)
-                    }
-                    className="mt-0.5 size-4 accent-current"
-                  />
-                  <span>
-                    <span className="block text-sm font-medium">
-                      {language === "ar"
-                        ? "عرض الترجمة الإنجليزية"
-                        : "Show English translation"}
-                    </span>
-                    <span className="mt-1 block text-xs leading-5 text-muted">
-                      {language === "ar"
-                        ? "تضيف ترجمة إنجليزية واحدة أسفل كل آية عربية."
-                        : "Adds one English translation beneath each Arabic ayah."}
-                    </span>
+              <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-3">
+                <input
+                  type="checkbox"
+                  checked={showTranslation}
+                  onChange={(event) => setShowTranslation(event.target.checked)}
+                  className="mt-0.5 size-4 accent-current"
+                />
+                <span>
+                  <span
+                    className={cn(
+                      "block text-sm font-medium",
+                      language === "ar" && "arabic text-base",
+                    )}
+                  >
+                    {language === "ar"
+                      ? "عرض الترجمة الإنجليزية"
+                      : "Show original Arabic"}
                   </span>
-                </label>
-              )}
+                  <span
+                    className={cn(
+                      "mt-1 block text-xs leading-5 text-muted",
+                      language === "ar" && "arabic text-sm leading-6",
+                    )}
+                  >
+                    {language === "ar"
+                      ? "تضيف ترجمة إنجليزية واحدة أسفل كل آية عربية."
+                      : "Places the Arabic text above the English translation."}
+                  </span>
+                </span>
+              </label>
             </SettingSection>
           </>
         }
