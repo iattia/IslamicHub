@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Search, Settings2, X } from "lucide-react";
+import { BookOpen, Check, Search, Settings2, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppearancePicker } from "@/components/appearance-picker";
@@ -57,21 +57,28 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
     return () => document.removeEventListener("keydown", close);
   }, [settingsOpen]);
   return (
-    <header className="sticky top-0 z-40 border-b border-line/80 bg-canvas/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-line/70 bg-canvas/90 backdrop-blur-xl">
+      <div className="mx-auto grid h-16 max-w-[90rem] grid-cols-[1fr_auto] items-center px-4 sm:px-6 md:grid-cols-[1fr_auto_1fr]">
         <Link
           href="/"
-          className="group flex items-center gap-2.5 text-base font-semibold tracking-tight"
+          className="group flex w-fit items-center gap-2.5 text-[15px] font-semibold tracking-tight"
         >
-          <span className="grid size-8 place-items-center rounded-full bg-ink font-arabic text-lg text-canvas transition-transform group-hover:rotate-12">
-            هـ
+          <span
+            className="relative grid size-9 place-items-center"
+            aria-hidden="true"
+          >
+            <span className="absolute inset-x-1 top-0 h-7 rounded-t-full border border-accent/70 transition-colors group-hover:bg-sand" />
+            <BookOpen
+              className="relative mt-3 size-4 text-accent"
+              strokeWidth={1.7}
+            />
           </span>
           <span>IslamicHub</span>
         </Link>
         <nav
           aria-label={language === "ar" ? "التنقل الرئيسي" : "Primary"}
           dir={language === "ar" ? "rtl" : "ltr"}
-          className="hidden items-center gap-4 text-sm text-muted md:flex lg:gap-6"
+          className="hidden items-center gap-6 text-[13px] text-muted md:flex lg:gap-8"
         >
           {primaryLinks.map((link) => {
             const active = pathname.startsWith(link.match);
@@ -81,7 +88,7 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
                 href={link.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative py-5 transition hover:text-ink",
+                  "relative py-[1.42rem] transition-colors hover:text-ink",
                   active && "font-medium text-ink",
                 )}
               >
@@ -89,20 +96,25 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
                   {language === "ar" ? link.arabicLabel : link.label}
                 </span>
                 {active && (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-accent" />
+                  <span className="absolute inset-x-0 bottom-0 h-px bg-accent" />
                 )}
               </Link>
             );
           })}
         </nav>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-end gap-1">
           <Link
             href="/search"
             aria-label={language === "ar" ? "البحث في القرآن" : "Search Quran"}
           >
             <Button variant="ghost" size="sm">
               <Search className="size-4" />
-              <span className={cn("hidden sm:inline", language === "ar" && "arabic text-base")}>
+              <span
+                className={cn(
+                  "hidden sm:inline",
+                  language === "ar" && "arabic text-base",
+                )}
+              >
                 {language === "ar" ? "البحث" : "Search"}
               </span>
             </Button>
@@ -134,7 +146,7 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
                 }
                 lang={language}
                 dir={language === "ar" ? "rtl" : "ltr"}
-                className="absolute right-0 top-11 w-[min(21rem,calc(100vw-2rem))] rounded-2xl border border-line bg-panel p-4 shadow-xl"
+                className="absolute right-0 top-11 w-[min(21rem,calc(100vw-2rem))] rounded-xl border border-line bg-panel p-4 shadow-[0_20px_60px_hsl(var(--ink)/.12)]"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -170,8 +182,8 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
                   </p>
                   <p className="mt-1 text-xs leading-5 text-muted">
                     {language === "ar"
-                      ? "اختر لغة واحدة، أو أضف الترجمة الإنجليزية إلى العربية."
-                      : "Keep one language by default, or pair English with Arabic."}
+                      ? "استخدم العربية وحدها، أو أضف إليها الترجمة الإنجليزية."
+                      : "Use English alone, or pair it with the original Arabic text."}
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {(
@@ -198,30 +210,38 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
                       </button>
                     ))}
                   </div>
-                  {language === "ar" && (
-                    <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-3">
-                      <input
-                        type="checkbox"
-                        checked={showTranslation}
-                        onChange={(event) =>
-                          setShowTranslation(event.target.checked)
-                        }
-                        className="mt-0.5 size-4 accent-current"
-                      />
-                      <span>
-                        <span className="block text-sm font-medium">
-                          {language === "ar"
-                            ? "عرض الترجمة الإنجليزية"
-                            : "Show English translation"}
-                        </span>
-                        <span className="mt-1 block text-xs leading-5 text-muted">
-                          {language === "ar"
-                            ? "تظهر الترجمة الإنجليزية أسفل النص العربي."
-                            : "Places English beneath the Arabic text."}
-                        </span>
+                  <label className="mt-3 flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-canvas p-3">
+                    <input
+                      type="checkbox"
+                      checked={showTranslation}
+                      onChange={(event) =>
+                        setShowTranslation(event.target.checked)
+                      }
+                      className="mt-0.5 size-4 accent-current"
+                    />
+                    <span>
+                      <span
+                        className={cn(
+                          "block text-sm font-medium",
+                          language === "ar" && "arabic text-base",
+                        )}
+                      >
+                        {language === "ar"
+                          ? "عرض الترجمة الإنجليزية"
+                          : "Show original Arabic"}
                       </span>
-                    </label>
-                  )}
+                      <span
+                        className={cn(
+                          "mt-1 block text-xs leading-5 text-muted",
+                          language === "ar" && "arabic text-sm leading-6",
+                        )}
+                      >
+                        {language === "ar"
+                          ? "تظهر الترجمة الإنجليزية أسفل النص العربي."
+                          : "Places the Arabic text above the English translation."}
+                      </span>
+                    </span>
+                  </label>
                 </section>
 
                 <section className="mt-4 border-t border-line pt-4">
@@ -247,7 +267,7 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
               </Button>
             </Link>
           ) : (
-            <span className="hidden rounded-full border border-line bg-panel px-3 py-1.5 text-xs text-muted sm:inline">
+            <span className="hidden px-2 text-[11px] text-muted xl:inline">
               {language === "ar" ? "حفظ محلي" : "Local mode"}
             </span>
           )}
@@ -258,7 +278,7 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
           language === "ar" ? "التنقل الرئيسي للجوال" : "Primary mobile"
         }
         dir={language === "ar" ? "rtl" : "ltr"}
-        className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 pb-2 md:hidden [scrollbar-width:none]"
+        className="mx-auto flex max-w-[90rem] gap-5 overflow-x-auto px-4 pb-2 md:hidden [scrollbar-width:none]"
       >
         {primaryLinks.map((link) => {
           const active = pathname.startsWith(link.match);
@@ -268,8 +288,10 @@ export function SiteHeader({ authEnabled }: { authEnabled: boolean }) {
               href={link.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition",
-                active ? "bg-ink text-canvas" : "text-muted hover:bg-sand",
+                "shrink-0 border-b py-1.5 text-xs font-medium transition-colors",
+                active
+                  ? "border-accent text-ink"
+                  : "border-transparent text-muted hover:text-ink",
               )}
             >
               <span className={cn(language === "ar" && "arabic text-sm")}>
