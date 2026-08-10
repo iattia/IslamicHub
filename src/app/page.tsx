@@ -2,11 +2,13 @@
 
 import {
   ArrowRight,
+  ArrowUpRight,
   BookOpen,
   Clock3,
   Headphones,
   Search,
   Sparkles,
+  Target,
 } from "lucide-react";
 import Link from "next/link";
 import { useContentLanguage } from "@/components/content-language-provider";
@@ -22,6 +24,7 @@ const highlights = [
     meta: "Chapter 2 · return to your place",
     arabicMeta: "السورة ٢ · عُد إلى موضعك",
     href: "/reader/2",
+    icon: BookOpen,
   },
   {
     eyebrow: "Daily reflection",
@@ -31,15 +34,17 @@ const highlights = [
     meta: "Ash-Sharh 94:5",
     arabicMeta: "الشرح ٩٤:٥",
     href: "/reader/94",
+    icon: Sparkles,
   },
   {
-    eyebrow: "Listen again",
-    arabicEyebrow: "استمع مجددًا",
+    eyebrow: "Recently listened",
+    arabicEyebrow: "استمعت إليه مؤخرًا",
     title: "Al-Kahf",
     arabicTitle: "سورة الكهف",
-    meta: "A gentle recitation for Friday",
-    arabicMeta: "تلاوة هادئة ليوم الجمعة",
+    meta: "Mishary Rashid Alafasy",
+    arabicMeta: "مشاري راشد العفاسي",
     href: "/reader/18",
+    icon: Headphones,
   },
 ];
 
@@ -60,51 +65,40 @@ export default function HomePage() {
     <div
       lang={language}
       dir={arabic ? "rtl" : "ltr"}
-      className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-6 sm:pt-14"
+      className="mx-auto max-w-[90rem] px-4 pb-20 sm:px-6 lg:px-10"
     >
-      <section className="relative overflow-hidden rounded-[2rem] border border-line bg-panel px-6 py-12 sm:px-12 sm:py-16">
-        <div
-          className={cn(
-            "absolute inset-y-0 hidden w-[42%] paper-grid opacity-60 md:block",
-            arabic ? "left-0" : "right-0",
-          )}
-        />
-        <div className="relative max-w-2xl">
-          <div
-            className={cn(
-              "mb-6 inline-flex items-center gap-2 rounded-full border border-line bg-canvas px-3 py-1.5 text-xs font-medium text-muted",
-              arabic && "arabic text-base",
-            )}
-          >
-            <Sparkles className="size-3.5 text-accent" />
-            {arabic ? "مساحة متأنية للقرآن" : "A considered space for the Quran"}
-          </div>
+      <section className="grid min-h-[38rem] items-center gap-14 border-b border-line py-16 sm:py-20 lg:grid-cols-[1.08fr_.92fr] lg:gap-20 lg:py-24">
+        <div className="max-w-2xl">
           <h1
             className={cn(
-              "text-balance text-4xl font-semibold tracking-[-.045em] sm:text-6xl",
-              arabic && "arabic leading-[1.45] tracking-normal",
+              "editorial text-balance text-[3.4rem] leading-[.98] tracking-[-.055em] sm:text-[4.65rem]",
+              arabic &&
+                "arabic max-w-xl text-[3.3rem] font-medium leading-[1.45] tracking-normal sm:text-[4.5rem]",
             )}
           >
-            {arabic ? "اقرأ بحضور." : "Read with presence."}
+            {arabic ? "مساحة هادئة" : "A quieter way"}
             <br />
             <span className="text-accent">
-              {arabic ? "وادرس بوضوح." : "Study with clarity."}
+              {arabic ? "للقراءة والتدبر." : "to read and reflect."}
             </span>
           </h1>
           <p
             className={cn(
-              "mt-5 max-w-lg text-pretty leading-7 text-muted",
-              arabic && "arabic text-xl leading-[1.9]",
+              "mt-7 max-w-xl text-pretty text-[17px] leading-8 text-muted",
+              arabic && "arabic text-xl leading-[2]",
             )}
           >
             {arabic
-              ? "يجمع IslamicHub القراءة والاستماع وملاحظات الدراسة الخاصة في مساحة واحدة هادئة بلا تشتيت."
-              : "IslamicHub brings reading, listening, and private study notes into one distraction-free home."}
+              ? "اقرأ القرآن، واستمع إلى التلاوة، ونظّم دراستك اليومية في مكان واحد صُمم للتركيز والسكينة."
+              : "Read the Quran, listen to recitation, and keep your daily study together in one calm, focused place."}
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-9 flex flex-wrap gap-3">
             <Link href="/reader/1">
-              <Button size="lg" className={arabic ? "arabic text-lg" : undefined}>
-                {arabic ? "افتح القرآن" : "Open the Quran"}
+              <Button
+                size="lg"
+                className={arabic ? "arabic text-lg" : undefined}
+              >
+                {arabic ? "ابدأ القراءة" : "Start reading"}
                 <ArrowRight className={cn("size-4", arabic && "rotate-180")} />
               </Button>
             </Link>
@@ -115,105 +109,161 @@ export default function HomePage() {
                 className={arabic ? "arabic text-lg" : undefined}
               >
                 <Search className="size-4" />
-                {arabic ? "ابحث عن آية" : "Search a verse"}
+                {arabic ? "ابحث في القرآن" : "Search the Quran"}
               </Button>
             </Link>
           </div>
         </div>
-      </section>
 
-      <section className="mt-14">
-        <div className="mb-5 flex items-end justify-between">
-          <div>
+        <div
+          className={cn(
+            "relative border-line lg:border-l lg:pl-14",
+            arabic && "lg:border-l-0 lg:border-r lg:pl-0 lg:pr-14",
+          )}
+        >
+          <div className="flex items-center justify-between border-b border-line pb-4">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-accent">
+              <Clock3 className="size-4" />
+              <span
+                className={cn(arabic && "arabic text-base tracking-normal")}
+              >
+                {arabic ? "آية اليوم" : "Today’s verse"}
+              </span>
+            </div>
+            <span
+              className={cn("text-xs text-muted", arabic && "arabic text-base")}
+            >
+              {arabic ? "الشرح ٩٤:٥" : "Ash-Sharh 94:5"}
+            </span>
+          </div>
+          <blockquote className="py-9 sm:py-12">
+            <p
+              lang="ar"
+              dir="rtl"
+              className="quran-arabic text-right text-[2.25rem] leading-[2.15] text-ink sm:text-[2.8rem]"
+            >
+              فَإِنَّ مَعَ ٱلْعُسْرِ يُسْرًا
+            </p>
             <p
               className={cn(
-                "text-xs font-semibold uppercase tracking-[.18em] text-accent",
-                arabic && "arabic text-base tracking-normal",
+                "mt-6 max-w-lg text-[15px] leading-7 text-muted",
+                arabic && "arabic text-lg leading-[1.9]",
               )}
             >
-              {arabic ? "مساحتك" : "Your space"}
+              {arabic
+                ? "إنّ مع الشدة ضياءً من التيسير والفرج."
+                : "For indeed, with hardship comes ease."}
             </p>
-            <h2
-              className={cn(
-                "mt-2 text-2xl font-semibold tracking-tight",
-                arabic && "arabic text-3xl leading-[1.6] tracking-normal",
-              )}
-            >
-              {arabic ? "تابع من حيث توقفت" : "Pick up where you left off"}
-            </h2>
-          </div>
+          </blockquote>
           <Link
+            href="/reader/94"
             className={cn(
-              "hidden text-sm text-muted hover:text-ink sm:block",
+              "group flex items-center justify-between border-t border-line pt-4 text-sm font-medium",
               arabic && "arabic text-base",
             )}
-            href="/collections"
           >
-            {arabic ? "عرض العلامات ←" : "View bookmarks →"}
+            <span>{arabic ? "اقرأ السورة" : "Read the surah"}</span>
+            <ArrowUpRight
+              className={cn(
+                "size-4 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent",
+                arabic && "-rotate-90 group-hover:-translate-x-0.5",
+              )}
+            />
           </Link>
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {highlights.map((item, index) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="group rounded-2xl border border-line bg-panel p-5 transition hover:-translate-y-0.5 hover:border-accent/40"
-            >
-              <div className="flex size-9 items-center justify-center rounded-xl bg-sand text-accent">
-                {[
-                  <BookOpen key="book" className="size-4" />,
-                  <Sparkles key="reflection" className="size-4" />,
-                  <Headphones key="audio" className="size-4" />,
-                ][index]}
-              </div>
-              <p
-                className={cn(
-                  "mt-7 text-xs font-semibold uppercase tracking-[.14em] text-muted",
-                  arabic && "arabic text-base tracking-normal",
-                )}
-              >
-                {arabic ? item.arabicEyebrow : item.eyebrow}
-              </p>
-              <h3
-                className={cn(
-                  "mt-2 font-semibold",
-                  arabic && "arabic text-xl leading-[1.7]",
-                )}
-              >
-                {arabic ? item.arabicTitle : item.title}
-              </h3>
-              <p
-                className={cn(
-                  "mt-1 text-sm text-muted",
-                  arabic && "arabic text-base leading-[1.8]",
-                )}
-              >
-                {arabic ? item.arabicMeta : item.meta}
-              </p>
-            </Link>
-          ))}
         </div>
       </section>
 
-      <section className="mt-14 grid gap-8 rounded-3xl border border-line bg-sand/40 p-6 sm:p-8 lg:grid-cols-[1.2fr_.8fr]">
+      <section className="grid gap-10 py-16 lg:grid-cols-[.42fr_1fr] lg:gap-20 lg:py-20">
         <div>
           <p
             className={cn(
-              "text-xs font-semibold uppercase tracking-[.18em] text-accent",
+              "text-xs font-semibold uppercase tracking-[.16em] text-accent",
+              arabic && "arabic text-base tracking-normal",
+            )}
+          >
+            {arabic ? "مساحتك" : "Your space"}
+          </p>
+          <h2
+            className={cn(
+              "editorial mt-3 text-3xl tracking-[-.03em] sm:text-4xl",
+              arabic && "arabic text-3xl leading-[1.7] tracking-normal",
+            )}
+          >
+            {arabic ? "تابع يومك بهدوء." : "Continue your day, gently."}
+          </h2>
+          <p
+            className={cn(
+              "mt-4 max-w-sm text-sm leading-6 text-muted",
+              arabic && "arabic text-base leading-[1.9]",
+            )}
+          >
+            {arabic
+              ? "موضع القراءة والتأملات والاستماع الأخير، من دون لوحات مزدحمة."
+              : "Your reading place, reflections, and recent listening—without a crowded dashboard."}
+          </p>
+        </div>
+
+        <div className="border-t border-line">
+          {highlights.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group grid grid-cols-[42px_1fr_auto] items-center gap-4 border-b border-line py-5 transition-colors hover:bg-sand/45 sm:gap-6 sm:px-3"
+              >
+                <span className="grid size-10 place-items-center rounded-full border border-line text-accent transition-colors group-hover:border-accent/40 group-hover:bg-panel">
+                  <Icon className="size-4" strokeWidth={1.7} />
+                </span>
+                <span className="min-w-0">
+                  <span
+                    className={cn(
+                      "block text-[11px] font-semibold uppercase tracking-[.13em] text-muted",
+                      arabic && "arabic text-sm tracking-normal",
+                    )}
+                  >
+                    {arabic ? item.arabicEyebrow : item.eyebrow}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-1 block truncate text-[15px] font-medium",
+                      arabic && "arabic text-lg",
+                    )}
+                  >
+                    {arabic ? item.arabicTitle : item.title}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 block truncate text-xs text-muted",
+                      arabic && "arabic text-sm",
+                    )}
+                  >
+                    {arabic ? item.arabicMeta : item.meta}
+                  </span>
+                </span>
+                <ArrowRight
+                  className={cn(
+                    "size-4 text-muted transition-transform group-hover:translate-x-1 group-hover:text-accent",
+                    arabic && "rotate-180 group-hover:-translate-x-1",
+                  )}
+                />
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="grid gap-8 border-y border-line py-10 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div>
+          <p
+            className={cn(
+              "text-xs font-semibold uppercase tracking-[.16em] text-accent",
               arabic && "arabic text-base tracking-normal",
             )}
           >
             {arabic ? "استكشف حسب الموضوع" : "Explore by theme"}
           </p>
-          <h2
-            className={cn(
-              "mt-2 text-2xl font-semibold tracking-tight",
-              arabic && "arabic text-3xl leading-[1.6] tracking-normal",
-            )}
-          >
-            {arabic ? "ابدأ بما يشغل بالك." : "Begin with what is on your mind."}
-          </h2>
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-x-7 gap-y-3">
             {topics.map((topic) => {
               const label = arabic ? topic.arabic : topic.english;
               return (
@@ -221,7 +271,7 @@ export default function HomePage() {
                   key={topic.english}
                   href={`/search?q=${encodeURIComponent(label)}`}
                   className={cn(
-                    "rounded-full border border-line bg-panel px-4 py-2 text-sm text-muted transition hover:border-accent hover:text-ink",
+                    "border-b border-transparent pb-1 text-sm text-muted transition-colors hover:border-accent hover:text-ink",
                     arabic && "arabic text-base",
                   )}
                 >
@@ -231,29 +281,36 @@ export default function HomePage() {
             })}
           </div>
         </div>
-        <div className="rounded-2xl bg-panel p-5">
-          <Clock3 className="size-5 text-accent" />
-          <p
+        <Link
+          href="/study"
+          className="group flex max-w-sm items-center gap-4 border-l border-line pl-6"
+        >
+          <Target className="size-5 shrink-0 text-accent" strokeWidth={1.7} />
+          <span>
+            <span
+              className={cn(
+                "block text-sm font-medium",
+                arabic && "arabic text-lg",
+              )}
+            >
+              {arabic ? "حدد هدفًا للقراءة" : "Set a reading goal"}
+            </span>
+            <span
+              className={cn(
+                "mt-1 block text-xs text-muted",
+                arabic && "arabic text-sm",
+              )}
+            >
+              {arabic ? "بالسورة أو الصفحة أو الجزء" : "By surah, page, or juz"}
+            </span>
+          </span>
+          <ArrowRight
             className={cn(
-              "mt-6 text-sm font-medium",
-              arabic && "arabic text-lg leading-[1.8]",
+              "ml-auto size-4 text-muted transition-transform group-hover:translate-x-1",
+              arabic && "mr-auto rotate-180 group-hover:-translate-x-1",
             )}
-          >
-            {arabic
-              ? "إيقاع قراءة يناسب مكانك ووقتك."
-              : "A reading rhythm that meets you where you are."}
-          </p>
-          <p
-            className={cn(
-              "mt-2 text-sm leading-6 text-muted",
-              arabic && "arabic text-base leading-[1.9]",
-            )}
-          >
-            {arabic
-              ? "حدد هدفًا بالسورة أو الصفحة أو الجزء أو الآية، ودع تقدمك يبقى متزامنًا بهدوء."
-              : "Set a goal by surah, page, juz, or verse and let your progress stay quietly in sync."}
-          </p>
-        </div>
+          />
+        </Link>
       </section>
     </div>
   );
